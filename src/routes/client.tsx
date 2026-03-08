@@ -2,18 +2,15 @@ import * as React from 'react'
 import {
   flexRender,
   getCoreRowModel,
-  getFilteredRowModel,
   getPaginationRowModel,
   useReactTable,
-  type ColumnDef,
-  type FilterFn,
 } from '@tanstack/react-table'
+import type { ColumnDef } from '@tanstack/react-table'
 import { createFileRoute } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
-import { matchSorter } from 'match-sorter'
 
+import { UserFiltersPanel } from '#/components/user-filters-panel'
 import { Button } from '#/components/ui/button'
-import { Input } from '#/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -30,7 +27,13 @@ import {
   TableRow,
 } from '#/components/ui/table'
 
-import type { UserRecord } from '#/data/db-utils'
+import {
+  buildUserFacets,
+  filterUsers,
+  getActiveFilterCount,
+} from '#/data/user-filters'
+import { EMPTY_USER_FILTERS } from '#/data/user-model'
+import type { UserFilters, UserRecord } from '#/data/user-model'
 
 const fetchAllUsers = createServerFn({ method: 'GET' }).handler(async () => {
   const { readDB } = await import('#/data/db-utils')
@@ -42,10 +45,15 @@ export const Route = createFileRoute('/client')({
   component: ClientTablePage,
 })
 
-const fuzzyFilter: FilterFn<UserRecord> = (row, columnId, filterValue) => {
-  const value = String(row.getValue(columnId) ?? '')
-  return matchSorter([value], String(filterValue ?? '')).length > 0
-}
+const currencyFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  maximumFractionDigits: 0,
+})
+
+const dateFormatter = new Intl.DateTimeFormat('uk-UA', {
+  dateStyle: 'medium',
+})
 
 const columns: ColumnDef<UserRecord>[] = [
   {
@@ -61,6 +69,28 @@ const columns: ColumnDef<UserRecord>[] = [
     header: 'Role',
   },
   {
+    accessorKey: 'department',
+    header: 'Department',
+  },
+  {
+    accessorKey: 'country',
+    header: 'Country',
+  },
+  {
+    accessorKey: 'age',
+    header: 'Age',
+  },
+  {
+    accessorKey: 'salary',
+    header: 'Salary',
+    cell: ({ row }) => currencyFormatter.format(row.original.salary),
+  },
+  {
+    accessorKey: 'joinedAt',
+    header: 'Joined',
+    cell: ({ row }) => dateFormatter.format(new Date(row.original.joinedAt)),
+  },
+  {
     accessorKey: 'status',
     header: 'Status',
     cell: ({ row }) => (
@@ -73,29 +103,105 @@ const columns: ColumnDef<UserRecord>[] = [
 
 function ClientTablePage() {
   const users = Route.useLoaderData()
-  const [globalFilter, setGlobalFilter] = React.useState('')
+  const [filters, setFilters] = React.useState<UserFilters>(EMPTY_USER_FILTERS)
   const [pagination, setPagination] = React.useState({
     pageIndex: 0,
     pageSize: 10,
   })
+  const deferredFilters = React.useDeferredValue(filters)
+
+  const filteredUsers = React.useMemo(
+    () => filterUsers(users, deferredFilters),
+    [users, deferredFilters],
+  )
+  const facets = React.useMemo(
+    () => buildUserFacets(users, deferredFilters),
+    [users, deferredFilters],
+  )
+  const activeFilterCount = React.useMemo(
+    () => getActiveFilterCount(deferredFilters),
+    [deferredFilters],
+  )
 
   const table = useReactTable({
-    data: users,
+    data: filteredUsers,
     columns,
+    autoResetPageIndex: false,
     state: {
-      globalFilter,
       pagination,
     },
-    onGlobalFilterChange: setGlobalFilter,
     onPaginationChange: setPagination,
-    globalFilterFn: fuzzyFilter,
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   })
 
-  const statusFilterValue =
-    (table.getColumn('status')?.getFilterValue() as string | undefined) ?? 'all'
+  const resetToFirstPage = React.useCallback(() => {
+    setPagination((current) =>
+      current.pageIndex === 0 ? current : { ...current, pageIndex: 0 },
+    )
+  }, [])
+
+  const updateFilters = React.useCallback(
+    (updater: (current: UserFilters) => UserFilters) => {
+      React.startTransition(() => {
+        setFilters((current) => updater(current))
+        resetToFirstPage()
+      })
+    },
+    [resetToFirstPage],
+  )
+
+  const updateTextFilter = (key: keyof UserFilters, value: string) => {
+    updateFilters((current) => ({ ...current, [key]: value }))
+  }
+
+  const updateStatusFilter = (value: UserFilters['status']) => {
+    updateFilters((current) => ({ ...current, status: value }))
+  }
+
+  const toggleArrayFilter = (
+    key: 'roles' | 'departments' | 'countries',
+    value: string,
+  ) => {
+    updateFilters((current) => {
+      switch (key) {
+        case 'roles': {
+          const nextValues = current.roles.includes(value as UserRecord['role'])
+            ? current.roles.filter((item) => item !== value)
+            : [...current.roles, value as UserRecord['role']]
+
+          return {
+            ...current,
+            roles: nextValues,
+          }
+        }
+        case 'departments': {
+          const nextValues = current.departments.includes(
+            value as UserRecord['department'],
+          )
+            ? current.departments.filter((item) => item !== value)
+            : [...current.departments, value as UserRecord['department']]
+
+          return {
+            ...current,
+            departments: nextValues,
+          }
+        }
+        case 'countries': {
+          const nextValues = current.countries.includes(
+            value as UserRecord['country'],
+          )
+            ? current.countries.filter((item) => item !== value)
+            : [...current.countries, value as UserRecord['country']]
+
+          return {
+            ...current,
+            countries: nextValues,
+          }
+        }
+      }
+    })
+  }
 
   return (
     <section className="space-y-4">
@@ -104,88 +210,80 @@ function ClientTablePage() {
           Client-side filtering
         </h1>
         <p className="text-sm text-(--sea-ink-soft)">
-          Дані завантажені один раз, а пошук/пагінація працюють локально.
+          Дані завантажуються один раз. Далі всі фільтри застосовуються у
+          браузері через явні JS-предикати, а fuzzy search працює локально.
         </p>
       </header>
 
       <div className="island-shell rounded-xl p-4 md:p-5">
-        <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="flex w-full flex-col gap-3 md:max-w-xl md:flex-row">
-            <Input
-              value={globalFilter}
-              onChange={(event) => setGlobalFilter(event.target.value)}
-              placeholder="Search by name, role or status..."
-              className="bg-white/80"
-            />
+        <UserFiltersPanel
+          filters={filters}
+          facets={facets}
+          activeFilterCount={activeFilterCount}
+          resultCount={filteredUsers.length}
+          totalCount={users.length}
+          modeLabel="Client-side predicates"
+          onTextChange={updateTextFilter}
+          onStatusChange={updateStatusFilter}
+          onToggleArrayValue={toggleArrayFilter}
+          onReset={() => {
+            React.startTransition(() => {
+              setFilters(EMPTY_USER_FILTERS)
+              setPagination((current) =>
+                current.pageIndex === 0
+                  ? current
+                  : { ...current, pageIndex: 0 },
+              )
+            })
+          }}
+        />
 
-            <Select
-              value={statusFilterValue}
-              onValueChange={(value) =>
-                table
-                  .getColumn('status')
-                  ?.setFilterValue(value === 'all' ? undefined : value)
-              }
-            >
-              <SelectTrigger className="w-full bg-white/80 md:w-40">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <p className="text-sm text-(--sea-ink-soft)">
-            Showing {table.getFilteredRowModel().rows.length} of {users.length}
-          </p>
-        </div>
-
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-
-          <TableBody>
-            {table.getRowModel().rows.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-20 text-center"
-                >
-                  No users found.
-                </TableCell>
-              </TableRow>
-            ) : (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
+        <div className="mt-5 overflow-x-auto rounded-xl border border-(--line) bg-white/65">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                    </TableHead>
                   ))}
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ))}
+            </TableHeader>
+
+            <TableBody>
+              {table.getRowModel().rows.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-20 text-center"
+                  >
+                    No users found.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">

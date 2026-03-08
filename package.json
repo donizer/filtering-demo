@@ -6,7 +6,8 @@
     "#/*": "./src/*"
   },
   "scripts": {
-    "dev": "vite dev --port 3000",
+    "generate:data": "node ./scripts/generate-db.mjs",
+    "dev": "pnpm run generate:data && vite dev --port 3000",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",

@@ -1,5 +1,7 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 
+import { FilteringPatterns } from '#/components/filtering-patterns'
+
 export const Route = createFileRoute('/')({
   component: HomePage,
 })
@@ -10,11 +12,13 @@ function HomePage() {
       <div className="island-shell rounded-2xl p-6 md:p-8">
         <p className="island-kicker">TanStack Table Demo</p>
         <h1 className="display-title mt-2 text-3xl font-semibold tracking-tight text-(--sea-ink) md:text-4xl">
-          Client-side vs Server-side filtering
+          Client-side vs Server-side filtering patterns
         </h1>
         <p className="mt-3 max-w-3xl text-(--sea-ink-soft)">
           Проєкт показує дві стратегії для таблиць: повне завантаження даних на
-          клієнт та URL-кероване фільтрування/пагінацію на сервері.
+          клієнт та URL-кероване фільтрування/пагінацію на сервері. Обидва
+          режими демонструють exact, range, inclusion, partial, fuzzy, faceted
+          та composite filtering.
         </p>
       </div>
 
@@ -23,8 +27,8 @@ function HomePage() {
           <h2 className="text-lg font-semibold">Client Filtering</h2>
 
           <p className="mt-2 text-sm text-(--sea-ink-soft)">
-            Один запит, усі дані у браузері, локальний fuzzy search і локальна
-            пагінація.
+            Один запит, усі дані у браузері, локальний fuzzy search, faceted
+            counts і миттєве поєднання кількох колонкових предикатів.
           </p>
           <Link to="/client" className="mt-4 inline-flex text-sm font-semibold">
             Open client demo
@@ -35,8 +39,8 @@ function HomePage() {
           <h2 className="text-lg font-semibold">Server Filtering</h2>
 
           <p className="mt-2 text-sm text-(--sea-ink-soft)">
-            Стан у URL, дебаунс пошуку, сервер фільтрує та повертає тільки
-            поточну сторінку.
+            Стан у URL, багатопольові фільтри, серверні facets і повернення лише
+            потрібної сторінки для активного запиту.
           </p>
 
           <Link to="/server" className="mt-4 inline-flex text-sm font-semibold">
@@ -44,6 +48,8 @@ function HomePage() {
           </Link>
         </article>
       </div>
+
+      <FilteringPatterns />
     </section>
   )
 }

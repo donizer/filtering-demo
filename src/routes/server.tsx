@@ -3,15 +3,13 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
-  type ColumnDef,
 } from '@tanstack/react-table'
+import type { ColumnDef } from '@tanstack/react-table'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
-import { useDebounceCallback } from 'usehooks-ts'
-import { z } from 'zod'
 
+import { UserFiltersPanel } from '#/components/user-filters-panel'
 import { Button } from '#/components/ui/button'
-import { Input } from '#/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -28,28 +26,38 @@ import {
   TableRow,
 } from '#/components/ui/table'
 
-import type { UserRecord } from '#/data/db-utils'
+import { getActiveFilterCount } from '#/data/user-filters'
+import { EMPTY_USER_FILTERS, usersQuerySchema } from '#/data/user-model'
+import type { UserFilters, UserRecord, UsersQuery } from '#/data/user-model'
 import {
   useQuery,
   useQueryClient,
   keepPreviousData,
 } from '@tanstack/react-query'
 
-const searchSchema = z.object({
-  page: z.coerce.number().int().min(1).default(1),
-  pageSize: z.coerce.number().int().min(1).max(50).default(10),
-  search: z.string().trim().optional(),
-  status: z.enum(['active', 'inactive', 'all']).default('all'),
+const currencyFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  maximumFractionDigits: 0,
 })
 
+const dateFormatter = new Intl.DateTimeFormat('uk-UA', {
+  dateStyle: 'medium',
+})
+
+function getFiltersFromQuery(query: UsersQuery): UserFilters {
+  const { page: _page, pageSize: _pageSize, ...filters } = query
+  return filters
+}
+
 const fetchUsersPaginated = createServerFn({ method: 'GET' })
-  .inputValidator(searchSchema)
+  .inputValidator(usersQuerySchema)
   .handler(async ({ data }) => {
     const { queryUsers } = await import('#/data/db-utils')
     return queryUsers(data)
   })
 
-function usersQueryOptions(params: z.infer<typeof searchSchema>) {
+function usersQueryOptions(params: UsersQuery) {
   return {
     queryKey: ['users', params] as const,
     queryFn: () => fetchUsersPaginated({ data: params }),
@@ -57,7 +65,7 @@ function usersQueryOptions(params: z.infer<typeof searchSchema>) {
 }
 
 export const Route = createFileRoute('/server')({
-  validateSearch: searchSchema,
+  validateSearch: usersQuerySchema,
   loaderDeps: ({ search }) => search,
   loader: async ({ deps, context }) => {
     await context.queryClient.prefetchQuery(usersQueryOptions(deps))
@@ -79,6 +87,28 @@ const columns: ColumnDef<UserRecord>[] = [
     header: 'Role',
   },
   {
+    accessorKey: 'department',
+    header: 'Department',
+  },
+  {
+    accessorKey: 'country',
+    header: 'Country',
+  },
+  {
+    accessorKey: 'age',
+    header: 'Age',
+  },
+  {
+    accessorKey: 'salary',
+    header: 'Salary',
+    cell: ({ row }) => currencyFormatter.format(row.original.salary),
+  },
+  {
+    accessorKey: 'joinedAt',
+    header: 'Joined',
+    cell: ({ row }) => dateFormatter.format(new Date(row.original.joinedAt)),
+  },
+  {
     accessorKey: 'status',
     header: 'Status',
     cell: ({ row }) => (
@@ -93,6 +123,9 @@ function ServerTablePage() {
   const search = Route.useSearch()
   const navigate = useNavigate({ from: Route.fullPath })
   const queryClient = useQueryClient()
+  const [draftFilters, setDraftFilters] = React.useState<UserFilters>(
+    getFiltersFromQuery(search),
+  )
 
   const dataQuery = useQuery({
     ...usersQueryOptions(search),
@@ -100,38 +133,104 @@ function ServerTablePage() {
   })
   const data = dataQuery.data
 
-  const [searchInput, setSearchInput] = React.useState(search.search ?? '')
-
   React.useEffect(() => {
-    setSearchInput(search.search ?? '')
-  }, [search.search])
+    setDraftFilters(getFiltersFromQuery(search))
+  }, [search])
 
   // Prefetch adjacent pages
   React.useEffect(() => {
     if (!dataQuery.data) return
 
-    if (search.page < dataQuery.data.pageCount) {
+    if (dataQuery.data.page < dataQuery.data.pageCount) {
       queryClient.prefetchQuery(
-        usersQueryOptions({ ...search, page: search.page + 1 }),
+        usersQueryOptions({ ...search, page: dataQuery.data.page + 1 }),
       )
     }
-    if (search.page > 1) {
+    if (dataQuery.data.page > 1) {
       queryClient.prefetchQuery(
-        usersQueryOptions({ ...search, page: search.page - 1 }),
+        usersQueryOptions({ ...search, page: dataQuery.data.page - 1 }),
       )
     }
   }, [search, dataQuery.data, queryClient])
 
-  const debouncedSetSearch = useDebounceCallback((value: string) => {
+  React.useEffect(() => {
+    if (!data) {
+      return
+    }
+
+    if (data.page !== search.page) {
+      navigate({
+        replace: true,
+        search: (prev) => ({
+          ...prev,
+          page: data.page,
+        }),
+      })
+    }
+  }, [data, navigate, search.page])
+
+  const updateTextFilter = (key: keyof UserFilters, value: string) => {
+    setDraftFilters((current) => ({ ...current, [key]: value }))
+  }
+
+  const updateStatusFilter = (value: UserFilters['status']) => {
+    setDraftFilters((current) => ({ ...current, status: value }))
+  }
+
+  const toggleArrayFilter = (
+    key: 'roles' | 'departments' | 'countries',
+    value: string,
+  ) => {
+    setDraftFilters((current) => {
+      switch (key) {
+        case 'roles': {
+          const nextValues = current.roles.includes(value as UserRecord['role'])
+            ? current.roles.filter((item) => item !== value)
+            : [...current.roles, value as UserRecord['role']]
+
+          return {
+            ...current,
+            roles: nextValues,
+          }
+        }
+        case 'departments': {
+          const nextValues = current.departments.includes(
+            value as UserRecord['department'],
+          )
+            ? current.departments.filter((item) => item !== value)
+            : [...current.departments, value as UserRecord['department']]
+
+          return {
+            ...current,
+            departments: nextValues,
+          }
+        }
+        case 'countries': {
+          const nextValues = current.countries.includes(
+            value as UserRecord['country'],
+          )
+            ? current.countries.filter((item) => item !== value)
+            : [...current.countries, value as UserRecord['country']]
+
+          return {
+            ...current,
+            countries: nextValues,
+          }
+        }
+      }
+    })
+  }
+
+  const applyFilters = () => {
     navigate({
       replace: true,
       search: (prev) => ({
         ...prev,
-        search: value.trim() ? value : undefined,
+        ...draftFilters,
         page: 1,
       }),
     })
-  }, 450)
+  }
 
   const table = useReactTable({
     data: data?.items ?? [],
@@ -148,16 +247,6 @@ function ServerTablePage() {
     },
   })
 
-  const onStatusChange = (value: 'all' | 'active' | 'inactive') => {
-    navigate({
-      search: (prev) => ({
-        ...prev,
-        status: value,
-        page: 1,
-      }),
-    })
-  }
-
   const onPageSizeChange = (value: string) => {
     const pageSize = Number(value)
 
@@ -170,7 +259,9 @@ function ServerTablePage() {
     })
   }
 
-  const currentPage = search.page
+  const currentPage = data?.page ?? search.page
+  const currentFilters = getFiltersFromQuery(search)
+  const activeFilterCount = getActiveFilterCount(currentFilters)
 
   if (!data) return null
 
@@ -181,86 +272,83 @@ function ServerTablePage() {
           Server-side filtering
         </h1>
         <p className="text-sm text-(--sea-ink-soft)">
-          URL керує пошуком, фільтрами та пагінацією. Сервер повертає тільки
-          потрібну сторінку даних.
+          URL керує фільтрами та пагінацією. Сервер застосовує ті самі
+          предикати, що і клієнтський демо-режим, але повертає тільки потрібну
+          сторінку даних.
         </p>
       </header>
 
       <div className="island-shell rounded-xl p-4 md:p-5">
-        <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="flex w-full flex-col gap-3 md:max-w-xl md:flex-row">
-            <Input
-              value={searchInput}
-              onChange={(event) => {
-                const value = event.target.value
-                setSearchInput(value)
-                debouncedSetSearch(value)
-              }}
-              placeholder="Search by name, role or status..."
-              className="bg-white/80"
-            />
+        <UserFiltersPanel
+          filters={draftFilters}
+          facets={data.facets}
+          activeFilterCount={activeFilterCount}
+          resultCount={data.totalCount}
+          totalCount={data.datasetCount}
+          modeLabel="Server-side query state"
+          onTextChange={updateTextFilter}
+          onStatusChange={updateStatusFilter}
+          onToggleArrayValue={toggleArrayFilter}
+          onReset={() => {
+            setDraftFilters(EMPTY_USER_FILTERS)
+            navigate({
+              replace: true,
+              search: (prev) => ({
+                ...prev,
+                ...EMPTY_USER_FILTERS,
+                page: 1,
+              }),
+            })
+          }}
+          onApply={applyFilters}
+        />
 
-            <Select value={search.status} onValueChange={onStatusChange}>
-              <SelectTrigger className="w-full bg-white/80 md:w-40">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <p className="text-sm text-(--sea-ink-soft)">
-            Showing {data.items.length} of {data.totalCount}
-          </p>
-        </div>
-
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-
-          <TableBody>
-            {table.getRowModel().rows.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-20 text-center"
-                >
-                  No users found.
-                </TableCell>
-              </TableRow>
-            ) : (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
+        <div className="mt-5 overflow-x-auto rounded-xl border border-(--line) bg-white/65">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                    </TableHead>
                   ))}
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ))}
+            </TableHeader>
+
+            <TableBody>
+              {table.getRowModel().rows.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-20 text-center"
+                  >
+                    No users found.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">

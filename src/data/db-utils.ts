@@ -1,32 +1,20 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { z } from 'zod'
 
-export const userRecordSchema = z.object({
-  id: z.number().int().positive(),
-  name: z.string(),
-  role: z.string(),
-  status: z.enum(['active', 'inactive']),
-})
+import { buildUserFacets, filterUsers } from '#/data/user-filters'
+import { usersSchema } from '#/data/user-model'
+import type { UserRecord, UsersQuery } from '#/data/user-model'
 
-const usersSchema = z.array(userRecordSchema)
-
-export type UserRecord = z.infer<typeof userRecordSchema>
-export type UserStatusFilter = UserRecord['status'] | 'all'
-
-export interface UsersQuery {
-  page: number
-  pageSize: number
-  search?: string
-  status: UserStatusFilter
-}
+export type { UserRecord, UsersQuery } from '#/data/user-model'
 
 export interface PaginatedUsersResult {
   items: UserRecord[]
   totalCount: number
+  datasetCount: number
   pageCount: number
   page: number
   pageSize: number
+  facets: ReturnType<typeof buildUserFacets>
 }
 
 const DB_FILE_PATH = path.join(process.cwd(), 'src/data/db.json')
@@ -40,34 +28,12 @@ export async function readDB() {
   return usersSchema.parse(parsed)
 }
 
-export function filterUsers(
-  users: UserRecord[],
-  params: Pick<UsersQuery, 'search' | 'status'>
-) {
-  const normalizedSearch = params.search?.trim().toLowerCase()
-
-  return users.filter((user) => {
-    if (params.status !== 'all' && user.status !== params.status) {
-      return false
-    }
-
-    if (!normalizedSearch) {
-      return true
-    }
-
-    return [user.name, user.role, user.status]
-      .join(' ')
-      .toLowerCase()
-      .includes(normalizedSearch)
-  })
-}
-
-export async function queryUsers(params: UsersQuery): Promise<PaginatedUsersResult> {
+export async function queryUsers(
+  params: UsersQuery,
+): Promise<PaginatedUsersResult> {
   const allUsers = await readDB()
-  const filtered = filterUsers(allUsers, {
-    search: params.search,
-    status: params.status,
-  })
+  const filtered = filterUsers(allUsers, params)
+  const facets = buildUserFacets(allUsers, params)
 
   const safePageSize = Math.max(1, params.pageSize)
   const pageCount = Math.max(1, Math.ceil(filtered.length / safePageSize))
@@ -77,8 +43,10 @@ export async function queryUsers(params: UsersQuery): Promise<PaginatedUsersResu
   return {
     items: filtered.slice(start, start + safePageSize),
     totalCount: filtered.length,
+    datasetCount: allUsers.length,
     pageCount,
     page,
     pageSize: safePageSize,
+    facets,
   }
 }
