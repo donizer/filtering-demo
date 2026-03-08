@@ -1,29 +1,49 @@
-import { useQuery } from '@tanstack/react-query'
-import { createFileRoute } from '@tanstack/react-router'
-import { createServerFn, useServerFn } from '@tanstack/react-start'
-import { z } from 'zod'
+import { Link, createFileRoute } from '@tanstack/react-router'
 
-export const Route = createFileRoute('/')({ component: App })
-
-const schema = z.object({
-  name: z.string(),
+export const Route = createFileRoute('/')({
+  component: HomePage,
 })
 
-const getServerData = createServerFn({
-  method: 'POST',
-})
-  .inputValidator(schema)
-  .handler(async ({ data }) => {
-    return `Hello, ${data.name}!`
-  })
+function HomePage() {
+  return (
+    <section className="rise-in space-y-6">
+      <div className="island-shell rounded-2xl p-6 md:p-8">
+        <p className="island-kicker">TanStack Table Demo</p>
+        <h1 className="display-title mt-2 text-3xl font-semibold tracking-tight text-(--sea-ink) md:text-4xl">
+          Client-side vs Server-side filtering
+        </h1>
+        <p className="mt-3 max-w-3xl text-(--sea-ink-soft)">
+          Проєкт показує дві стратегії для таблиць: повне завантаження даних на
+          клієнт та URL-кероване фільтрування/пагінацію на сервері.
+        </p>
+      </div>
 
-function App() {
-  const getData = useServerFn(getServerData)
+      <div className="grid gap-4 md:grid-cols-2">
+        <article className="feature-card rounded-xl border border-(--line) p-5">
+          <h2 className="text-lg font-semibold">Client Filtering</h2>
 
-  const dataQuery = useQuery({
-    queryKey: ['data'],
-    queryFn: () => getData({ data: { name: 'TanStack' } }),
-  })
+          <p className="mt-2 text-sm text-(--sea-ink-soft)">
+            Один запит, усі дані у браузері, локальний fuzzy search і локальна
+            пагінація.
+          </p>
+          <Link to="/client" className="mt-4 inline-flex text-sm font-semibold">
+            Open client demo
+          </Link>
+        </article>
 
-  return <main className="">{dataQuery.data}</main>
+        <article className="feature-card rounded-xl border border-(--line) p-5">
+          <h2 className="text-lg font-semibold">Server Filtering</h2>
+
+          <p className="mt-2 text-sm text-(--sea-ink-soft)">
+            Стан у URL, дебаунс пошуку, сервер фільтрує та повертає тільки
+            поточну сторінку.
+          </p>
+
+          <Link to="/server" className="mt-4 inline-flex text-sm font-semibold">
+            Open server demo
+          </Link>
+        </article>
+      </div>
+    </section>
+  )
 }

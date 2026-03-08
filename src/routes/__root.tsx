@@ -1,5 +1,7 @@
 import {
   HeadContent,
+  Link,
+  Outlet,
   Scripts,
   createRootRouteWithContext,
 } from '@tanstack/react-router'
@@ -29,7 +31,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'TanStack Start Starter',
+        title: 'Filtering Demo | TanStack Table + Router',
       },
     ],
     links: [
@@ -40,7 +42,59 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
     ],
   }),
   shellComponent: RootDocument,
+  component: RootLayout,
 })
+
+function RootLayout() {
+  return (
+    <div className="min-h-screen flex flex-col">
+      <header className="sticky top-0 z-10 border-b border-(--line) bg-(--header-bg) backdrop-blur-md">
+        <div className="page-wrap flex flex-wrap items-center justify-between gap-3 py-4">
+          <Link
+            to="/"
+            className="display-title text-lg font-semibold tracking-tight text-(--sea-ink) no-underline"
+          >
+            Filtering Demo
+          </Link>
+
+          <nav className="flex items-center gap-5 text-sm font-medium">
+            <Link
+              to="/"
+              className="nav-link"
+              activeProps={{ className: 'nav-link is-active' }}
+            >
+              Home
+            </Link>
+            <Link
+              to="/client"
+              className="nav-link"
+              activeProps={{ className: 'nav-link is-active' }}
+            >
+              Client Filtering
+            </Link>
+            <Link
+              to="/server"
+              className="nav-link"
+              activeProps={{ className: 'nav-link is-active' }}
+            >
+              Server Filtering
+            </Link>
+          </nav>
+        </div>
+      </header>
+
+      <main className="page-wrap py-8 flex-1">
+        <Outlet />
+      </main>
+
+      <footer className="site-footer mt-8">
+        <div className="page-wrap py-4 text-sm text-(--sea-ink-soft)">
+          TanStack Start demo: client-side vs server-side filtering
+        </div>
+      </footer>
+    </div>
+  )
+}
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
