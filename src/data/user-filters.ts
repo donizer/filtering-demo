@@ -1,5 +1,5 @@
 import { matchSorter } from 'match-sorter'
-import sift from 'sift'
+import sift, { type NestedQuery, type Query, type ValueQuery } from 'sift'
 
 import {
   EMPTY_USER_FILTERS,
@@ -46,6 +46,10 @@ const GLOBAL_SEARCH_KEYS: ReadonlyArray<keyof UserRecord> = [
   'status',
 ]
 
+type UserFilterQuery = NestedQuery<UserRecord>
+type UserListField = 'role' | 'department' | 'country'
+type UserRangeField = 'age' | 'salary' | 'joinedAt'
+
 function parseOptionalInteger(value: string) {
   const trimmed = value.trim()
 
@@ -72,8 +76,48 @@ function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-export function buildUserMongoQuery(filters: UserFilters) {
-  const conditions: Array<Record<string, unknown>> = []
+function buildRangeValueQuery<TValue extends string | number>(
+  min: TValue | undefined,
+  max: TValue | undefined,
+): ValueQuery<TValue> | undefined {
+  const query = {} as ValueQuery<TValue>
+
+  if (min !== undefined) {
+    query.$gte = min
+  }
+
+  if (max !== undefined) {
+    query.$lte = max
+  }
+
+  return Object.values(query).some((v) => v !== undefined) ? query : undefined
+}
+
+function buildInCondition<TKey extends UserListField>(
+  field: TKey,
+  values: UserRecord[TKey][],
+): UserFilterQuery {
+  return {
+    [field]: { $in: values } as ValueQuery<UserRecord[TKey]>,
+  } satisfies UserFilterQuery
+}
+
+function buildRangeCondition<TKey extends UserRangeField>(
+  field: TKey,
+  min: UserRecord[TKey] | undefined,
+  max: UserRecord[TKey] | undefined,
+): UserFilterQuery | undefined {
+  const rangeQuery = buildRangeValueQuery(min, max)
+
+  if (!rangeQuery) {
+    return undefined
+  }
+
+  return { [field]: rangeQuery } satisfies UserFilterQuery
+}
+
+export function buildUserMongoQuery(filters: UserFilters): Query<UserRecord> {
+  const conditions: UserFilterQuery[] = []
   const exactId = parseOptionalInteger(filters.id)
   const trimmedName = filters.name.trim()
   const ageMin = parseOptionalInteger(filters.ageMin)
@@ -101,42 +145,37 @@ export function buildUserMongoQuery(filters: UserFilters) {
   }
 
   if (filters.roles.length > 0) {
-    conditions.push({ role: { $in: filters.roles } })
+    conditions.push(buildInCondition('role', filters.roles))
   }
 
   if (filters.departments.length > 0) {
-    conditions.push({ department: { $in: filters.departments } })
+    conditions.push(buildInCondition('department', filters.departments))
   }
 
   if (filters.countries.length > 0) {
-    conditions.push({ country: { $in: filters.countries } })
+    conditions.push(buildInCondition('country', filters.countries))
   }
 
-  if (ageMin !== undefined || ageMax !== undefined) {
-    conditions.push({
-      age: {
-        ...(ageMin !== undefined ? { $gte: ageMin } : null),
-        ...(ageMax !== undefined ? { $lte: ageMax } : null),
-      },
-    })
+  const ageCondition = buildRangeCondition('age', ageMin, ageMax)
+
+  if (ageCondition) {
+    conditions.push(ageCondition)
   }
 
-  if (salaryMin !== undefined || salaryMax !== undefined) {
-    conditions.push({
-      salary: {
-        ...(salaryMin !== undefined ? { $gte: salaryMin } : null),
-        ...(salaryMax !== undefined ? { $lte: salaryMax } : null),
-      },
-    })
+  const salaryCondition = buildRangeCondition('salary', salaryMin, salaryMax)
+
+  if (salaryCondition) {
+    conditions.push(salaryCondition)
   }
 
-  if (joinedFrom !== undefined || joinedTo !== undefined) {
-    conditions.push({
-      joinedAt: {
-        ...(joinedFrom !== undefined ? { $gte: joinedFrom } : null),
-        ...(joinedTo !== undefined ? { $lte: joinedTo } : null),
-      },
-    })
+  const joinedAtCondition = buildRangeCondition(
+    'joinedAt',
+    joinedFrom,
+    joinedTo,
+  )
+
+  if (joinedAtCondition) {
+    conditions.push(joinedAtCondition)
   }
 
   if (conditions.length === 0) {
