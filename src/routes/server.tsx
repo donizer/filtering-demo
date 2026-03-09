@@ -76,6 +76,29 @@ function buildDraftPreviewQuery(
   }
 }
 
+function areFiltersEqual(left: UserFilters, right: UserFilters) {
+  return (
+    left.global === right.global &&
+    left.id === right.id &&
+    left.name === right.name &&
+    left.status === right.status &&
+    left.ageMin === right.ageMin &&
+    left.ageMax === right.ageMax &&
+    left.salaryMin === right.salaryMin &&
+    left.salaryMax === right.salaryMax &&
+    left.joinedFrom === right.joinedFrom &&
+    left.joinedTo === right.joinedTo &&
+    left.roles.length === right.roles.length &&
+    left.roles.every((value, index) => value === right.roles[index]) &&
+    left.departments.length === right.departments.length &&
+    left.departments.every(
+      (value, index) => value === right.departments[index],
+    ) &&
+    left.countries.length === right.countries.length &&
+    left.countries.every((value, index) => value === right.countries[index])
+  )
+}
+
 function sortableHeader(label: string) {
   return ({
     column,
@@ -335,7 +358,12 @@ function ServerTablePage() {
 
   const currentPage = data?.page ?? search.page
   const previewData = draftPreviewData ?? data
+  const appliedFilters = React.useMemo(
+    () => getFiltersFromQuery(search),
+    [search],
+  )
   const activeFilterCount = getActiveFilterCount(draftFilters)
+  const isApplyPending = !areFiltersEqual(draftFilters, appliedFilters)
 
   if (!data) return null
 
@@ -360,6 +388,7 @@ function ServerTablePage() {
           resultCount={previewData?.totalCount ?? data.totalCount}
           totalCount={previewData?.datasetCount ?? data.datasetCount}
           modeLabel="Server-side query state"
+          isApplyPending={isApplyPending}
           onTextChange={updateTextFilter}
           onStatusChange={updateStatusFilter}
           onToggleArrayValue={toggleArrayFilter}

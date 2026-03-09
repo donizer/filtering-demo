@@ -33,6 +33,7 @@ interface UserFiltersPanelProps {
   resultCount: number
   totalCount: number
   modeLabel: string
+  isApplyPending?: boolean
   onTextChange: (key: TextFilterKey, value: string) => void
   onStatusChange: (value: UserStatusFilter) => void
   onToggleArrayValue: (key: ArrayFilterKey, value: string) => void
@@ -101,6 +102,7 @@ export function UserFiltersPanel({
   resultCount,
   totalCount,
   modeLabel,
+  isApplyPending = false,
   onTextChange,
   onStatusChange,
   onToggleArrayValue,
@@ -280,7 +282,15 @@ export function UserFiltersPanel({
           <Button variant="ghost" onClick={onReset}>
             Reset filters
           </Button>
-          {onApply ? <Button onClick={onApply}>Apply filters</Button> : null}
+          {onApply ? (
+            <Button
+              variant={isApplyPending ? 'default' : 'ghost'}
+              disabled={!isApplyPending}
+              onClick={onApply}
+            >
+              Apply filters
+            </Button>
+          ) : null}
         </div>
       </div>
     </section>
