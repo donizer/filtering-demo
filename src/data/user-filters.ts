@@ -1,4 +1,5 @@
 import { matchSorter } from 'match-sorter'
+import sift from 'sift'
 
 import {
   EMPTY_USER_FILTERS,
@@ -37,6 +38,14 @@ const FILTERED_FACET_KEYS = {
   statuses: 'status',
 } as const
 
+const GLOBAL_SEARCH_KEYS: ReadonlyArray<keyof UserRecord> = [
+  'name',
+  'role',
+  'department',
+  'country',
+  'status',
+]
+
 function parseOptionalInteger(value: string) {
   const trimmed = value.trim()
 
@@ -56,7 +65,85 @@ function parseOptionalDate(value: string) {
   }
 
   const parsed = Date.parse(trimmed)
-  return Number.isNaN(parsed) ? undefined : parsed
+  return Number.isNaN(parsed) ? undefined : trimmed
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+export function buildUserMongoQuery(filters: UserFilters) {
+  const conditions: Array<Record<string, unknown>> = []
+  const exactId = parseOptionalInteger(filters.id)
+  const trimmedName = filters.name.trim()
+  const ageMin = parseOptionalInteger(filters.ageMin)
+  const ageMax = parseOptionalInteger(filters.ageMax)
+  const salaryMin = parseOptionalInteger(filters.salaryMin)
+  const salaryMax = parseOptionalInteger(filters.salaryMax)
+  const joinedFrom = parseOptionalDate(filters.joinedFrom)
+  const joinedTo = parseOptionalDate(filters.joinedTo)
+
+  if (exactId !== undefined) {
+    conditions.push({ id: exactId })
+  }
+
+  if (trimmedName) {
+    conditions.push({
+      name: {
+        $regex: escapeRegExp(trimmedName),
+        $options: 'i',
+      },
+    })
+  }
+
+  if (filters.status !== 'all') {
+    conditions.push({ status: filters.status })
+  }
+
+  if (filters.roles.length > 0) {
+    conditions.push({ role: { $in: filters.roles } })
+  }
+
+  if (filters.departments.length > 0) {
+    conditions.push({ department: { $in: filters.departments } })
+  }
+
+  if (filters.countries.length > 0) {
+    conditions.push({ country: { $in: filters.countries } })
+  }
+
+  if (ageMin !== undefined || ageMax !== undefined) {
+    conditions.push({
+      age: {
+        ...(ageMin !== undefined ? { $gte: ageMin } : null),
+        ...(ageMax !== undefined ? { $lte: ageMax } : null),
+      },
+    })
+  }
+
+  if (salaryMin !== undefined || salaryMax !== undefined) {
+    conditions.push({
+      salary: {
+        ...(salaryMin !== undefined ? { $gte: salaryMin } : null),
+        ...(salaryMax !== undefined ? { $lte: salaryMax } : null),
+      },
+    })
+  }
+
+  if (joinedFrom !== undefined || joinedTo !== undefined) {
+    conditions.push({
+      joinedAt: {
+        ...(joinedFrom !== undefined ? { $gte: joinedFrom } : null),
+        ...(joinedTo !== undefined ? { $lte: joinedTo } : null),
+      },
+    })
+  }
+
+  if (conditions.length === 0) {
+    return {}
+  }
+
+  return { $and: conditions }
 }
 
 function countValues<TValue extends string>(
@@ -72,79 +159,15 @@ function countValues<TValue extends string>(
 
 export function filterUsers(users: UserRecord[], filters: UserFilters) {
   const globalSearch = filters.global.trim()
-  const nameQuery = filters.name.trim().toLowerCase()
-  const exactId = parseOptionalInteger(filters.id)
-  const ageMin = parseOptionalInteger(filters.ageMin)
-  const ageMax = parseOptionalInteger(filters.ageMax)
-  const salaryMin = parseOptionalInteger(filters.salaryMin)
-  const salaryMax = parseOptionalInteger(filters.salaryMax)
-  const joinedFrom = parseOptionalDate(filters.joinedFrom)
-  const joinedTo = parseOptionalDate(filters.joinedTo)
+  const mongoQuery = buildUserMongoQuery(filters)
+  const exactFilteredUsers = users.filter(sift<UserRecord>(mongoQuery))
 
-  const fuzzyScopedUsers = globalSearch
-    ? matchSorter(users, globalSearch, {
-        keys: ['name', 'role', 'department', 'country', 'status'],
-      })
-    : users
+  if (!globalSearch) {
+    return exactFilteredUsers
+  }
 
-  return fuzzyScopedUsers.filter((user) => {
-    if (exactId !== undefined && user.id !== exactId) {
-      return false
-    }
-
-    if (nameQuery && !user.name.toLowerCase().includes(nameQuery)) {
-      return false
-    }
-
-    if (filters.status !== 'all' && user.status !== filters.status) {
-      return false
-    }
-
-    if (filters.roles.length > 0 && !filters.roles.includes(user.role)) {
-      return false
-    }
-
-    if (
-      filters.departments.length > 0 &&
-      !filters.departments.includes(user.department)
-    ) {
-      return false
-    }
-
-    if (
-      filters.countries.length > 0 &&
-      !filters.countries.includes(user.country)
-    ) {
-      return false
-    }
-
-    if (ageMin !== undefined && user.age < ageMin) {
-      return false
-    }
-
-    if (ageMax !== undefined && user.age > ageMax) {
-      return false
-    }
-
-    if (salaryMin !== undefined && user.salary < salaryMin) {
-      return false
-    }
-
-    if (salaryMax !== undefined && user.salary > salaryMax) {
-      return false
-    }
-
-    const joinedAt = Date.parse(user.joinedAt)
-
-    if (joinedFrom !== undefined && joinedAt < joinedFrom) {
-      return false
-    }
-
-    if (joinedTo !== undefined && joinedAt > joinedTo) {
-      return false
-    }
-
-    return true
+  return matchSorter(exactFilteredUsers, globalSearch, {
+    keys: GLOBAL_SEARCH_KEYS,
   })
 }
 
