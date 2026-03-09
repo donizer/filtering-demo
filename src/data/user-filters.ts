@@ -13,6 +13,8 @@ import type {
   UserFilters,
   UserRecord,
   UserRole,
+  UserSortDirection,
+  UserSortField,
   UserStatus,
 } from '#/data/user-model'
 
@@ -143,6 +145,37 @@ export function filterUsers(users: UserRecord[], filters: UserFilters) {
     }
 
     return true
+  })
+}
+
+export function sortUsers(
+  users: UserRecord[],
+  sortBy: '' | UserSortField,
+  sortDir: UserSortDirection,
+) {
+  if (!sortBy) {
+    return users
+  }
+
+  return [...users].sort((left, right) => {
+    const leftValue = left[sortBy]
+    const rightValue = right[sortBy]
+
+    let comparison = 0
+
+    if (typeof leftValue === 'number' && typeof rightValue === 'number') {
+      comparison = leftValue - rightValue
+    } else {
+      comparison = String(leftValue).localeCompare(String(rightValue), 'en', {
+        sensitivity: 'base',
+      })
+    }
+
+    if (comparison === 0) {
+      return left.id - right.id
+    }
+
+    return sortDir === 'desc' ? comparison * -1 : comparison
   })
 }
 

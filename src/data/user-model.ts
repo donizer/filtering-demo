@@ -30,6 +30,18 @@ export const USER_COUNTRIES = [
 
 export const USER_STATUSES = ['active', 'inactive'] as const
 export const USER_STATUS_FILTERS = ['all', ...USER_STATUSES] as const
+export const USER_SORT_FIELDS = [
+  'id',
+  'name',
+  'role',
+  'department',
+  'country',
+  'age',
+  'salary',
+  'joinedAt',
+  'status',
+] as const
+export const USER_SORT_DIRECTIONS = ['asc', 'desc'] as const
 
 export const userRecordSchema = z.object({
   id: z.number().int().positive(),
@@ -64,6 +76,8 @@ export const userFiltersSchema = z.object({
 export const usersQuerySchema = userFiltersSchema.extend({
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(50).default(10),
+  sortBy: z.union([z.enum(USER_SORT_FIELDS), z.literal('')]).default(''),
+  sortDir: z.enum(USER_SORT_DIRECTIONS).default('asc'),
 })
 
 export type UserRecord = z.infer<typeof userRecordSchema>
@@ -74,6 +88,8 @@ export type UserDepartment = UserRecord['department']
 export type UserCountry = UserRecord['country']
 export type UserStatus = UserRecord['status']
 export type UserStatusFilter = UserFilters['status']
+export type UserSortField = (typeof USER_SORT_FIELDS)[number]
+export type UserSortDirection = (typeof USER_SORT_DIRECTIONS)[number]
 
 export const EMPTY_USER_FILTERS: UserFilters = {
   global: '',

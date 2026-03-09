@@ -4,10 +4,11 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import type { ColumnDef } from '@tanstack/react-table'
+import type { ColumnDef, SortingState } from '@tanstack/react-table'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 
+import { SortableColumnHeader } from '#/components/sortable-column-header'
 import { UserFiltersPanel } from '#/components/user-filters-panel'
 import { Button } from '#/components/ui/button'
 import {
@@ -46,8 +47,41 @@ const dateFormatter = new Intl.DateTimeFormat('uk-UA', {
 })
 
 function getFiltersFromQuery(query: UsersQuery): UserFilters {
-  const { page: _page, pageSize: _pageSize, ...filters } = query
+  const {
+    page: _page,
+    pageSize: _pageSize,
+    sortBy: _sortBy,
+    sortDir: _sortDir,
+    ...filters
+  } = query
   return filters
+}
+
+function getSortingFromQuery(query: UsersQuery): SortingState {
+  if (!query.sortBy) {
+    return []
+  }
+
+  return [{ id: query.sortBy, desc: query.sortDir === 'desc' }]
+}
+
+function sortableHeader(label: string) {
+  return ({
+    column,
+  }: {
+    column: {
+      getIsSorted: () => false | 'asc' | 'desc'
+      getToggleSortingHandler: () =>
+        | React.MouseEventHandler<HTMLButtonElement>
+        | undefined
+    }
+  }) => (
+    <SortableColumnHeader
+      label={label}
+      sortDirection={column.getIsSorted()}
+      onClick={column.getToggleSortingHandler()}
+    />
+  )
 }
 
 const fetchUsersPaginated = createServerFn({ method: 'GET' })
@@ -76,41 +110,41 @@ export const Route = createFileRoute('/server')({
 const columns: ColumnDef<UserRecord>[] = [
   {
     accessorKey: 'id',
-    header: 'ID',
+    header: sortableHeader('ID'),
   },
   {
     accessorKey: 'name',
-    header: 'Name',
+    header: sortableHeader('Name'),
   },
   {
     accessorKey: 'role',
-    header: 'Role',
+    header: sortableHeader('Role'),
   },
   {
     accessorKey: 'department',
-    header: 'Department',
+    header: sortableHeader('Department'),
   },
   {
     accessorKey: 'country',
-    header: 'Country',
+    header: sortableHeader('Country'),
   },
   {
     accessorKey: 'age',
-    header: 'Age',
+    header: sortableHeader('Age'),
   },
   {
     accessorKey: 'salary',
-    header: 'Salary',
+    header: sortableHeader('Salary'),
     cell: ({ row }) => currencyFormatter.format(row.original.salary),
   },
   {
     accessorKey: 'joinedAt',
-    header: 'Joined',
+    header: sortableHeader('Joined'),
     cell: ({ row }) => dateFormatter.format(new Date(row.original.joinedAt)),
   },
   {
     accessorKey: 'status',
-    header: 'Status',
+    header: sortableHeader('Status'),
     cell: ({ row }) => (
       <span className="rounded-full border border-(--line) px-2 py-1 text-xs font-semibold capitalize">
         {row.original.status}
@@ -123,6 +157,7 @@ function ServerTablePage() {
   const search = Route.useSearch()
   const navigate = useNavigate({ from: Route.fullPath })
   const queryClient = useQueryClient()
+  const sorting = React.useMemo(() => getSortingFromQuery(search), [search])
   const [draftFilters, setDraftFilters] = React.useState<UserFilters>(
     getFiltersFromQuery(search),
   )
@@ -238,12 +273,28 @@ function ServerTablePage() {
     getCoreRowModel: getCoreRowModel(),
     manualFiltering: true,
     manualPagination: true,
+    manualSorting: true,
+    onSortingChange: (updater) => {
+      const nextSorting =
+        typeof updater === 'function' ? updater(sorting) : updater
+      const nextSort = nextSorting[0]
+
+      navigate({
+        search: (prev) => ({
+          ...prev,
+          sortBy: (nextSort?.id as UsersQuery['sortBy']) ?? '',
+          sortDir: nextSort?.desc ? 'desc' : 'asc',
+          page: 1,
+        }),
+      })
+    },
     pageCount: data?.pageCount ?? 0,
     state: {
       pagination: {
         pageIndex: search.page - 1,
         pageSize: search.pageSize,
       },
+      sorting,
     },
   })
 

@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 
-import { buildUserFacets, filterUsers } from '#/data/user-filters'
+import { buildUserFacets, filterUsers, sortUsers } from '#/data/user-filters'
 import { usersSchema } from '#/data/user-model'
 import type { UserRecord, UsersQuery } from '#/data/user-model'
 
@@ -33,6 +33,7 @@ export async function queryUsers(
 ): Promise<PaginatedUsersResult> {
   const allUsers = await readDB()
   const filtered = filterUsers(allUsers, params)
+  const sorted = sortUsers(filtered, params.sortBy, params.sortDir)
   const facets = buildUserFacets(allUsers, params)
 
   const safePageSize = Math.max(1, params.pageSize)
@@ -41,7 +42,7 @@ export async function queryUsers(
   const start = (page - 1) * safePageSize
 
   return {
-    items: filtered.slice(start, start + safePageSize),
+    items: sorted.slice(start, start + safePageSize),
     totalCount: filtered.length,
     datasetCount: allUsers.length,
     pageCount,

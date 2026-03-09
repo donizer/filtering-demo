@@ -3,12 +3,14 @@ import {
   flexRender,
   getCoreRowModel,
   getPaginationRowModel,
+  getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import type { ColumnDef } from '@tanstack/react-table'
+import type { ColumnDef, SortingState } from '@tanstack/react-table'
 import { createFileRoute } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 
+import { SortableColumnHeader } from '#/components/sortable-column-header'
 import { UserFiltersPanel } from '#/components/user-filters-panel'
 import { Button } from '#/components/ui/button'
 import {
@@ -55,44 +57,54 @@ const dateFormatter = new Intl.DateTimeFormat('uk-UA', {
   dateStyle: 'medium',
 })
 
+function sortableHeader(label: string): ColumnDef<UserRecord>['header'] {
+  return ({ column }) => (
+    <SortableColumnHeader
+      label={label}
+      sortDirection={column.getIsSorted()}
+      onClick={column.getToggleSortingHandler()}
+    />
+  )
+}
+
 const columns: ColumnDef<UserRecord>[] = [
   {
     accessorKey: 'id',
-    header: 'ID',
+    header: sortableHeader('ID'),
   },
   {
     accessorKey: 'name',
-    header: 'Name',
+    header: sortableHeader('Name'),
   },
   {
     accessorKey: 'role',
-    header: 'Role',
+    header: sortableHeader('Role'),
   },
   {
     accessorKey: 'department',
-    header: 'Department',
+    header: sortableHeader('Department'),
   },
   {
     accessorKey: 'country',
-    header: 'Country',
+    header: sortableHeader('Country'),
   },
   {
     accessorKey: 'age',
-    header: 'Age',
+    header: sortableHeader('Age'),
   },
   {
     accessorKey: 'salary',
-    header: 'Salary',
+    header: sortableHeader('Salary'),
     cell: ({ row }) => currencyFormatter.format(row.original.salary),
   },
   {
     accessorKey: 'joinedAt',
-    header: 'Joined',
+    header: sortableHeader('Joined'),
     cell: ({ row }) => dateFormatter.format(new Date(row.original.joinedAt)),
   },
   {
     accessorKey: 'status',
-    header: 'Status',
+    header: sortableHeader('Status'),
     cell: ({ row }) => (
       <span className="rounded-full border border-(--line) px-2 py-1 text-xs font-semibold capitalize">
         {row.original.status}
@@ -108,6 +120,7 @@ function ClientTablePage() {
     pageIndex: 0,
     pageSize: 10,
   })
+  const [sorting, setSorting] = React.useState<SortingState>([])
   const deferredFilters = React.useDeferredValue(filters)
 
   const filteredUsers = React.useMemo(
@@ -129,10 +142,16 @@ function ClientTablePage() {
     autoResetPageIndex: false,
     state: {
       pagination,
+      sorting,
     },
     onPaginationChange: setPagination,
+    onSortingChange: (updater) => {
+      setSorting(updater)
+      resetToFirstPage()
+    },
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
   })
 
   const resetToFirstPage = React.useCallback(() => {
