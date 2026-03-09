@@ -4,7 +4,7 @@ import path from 'node:path'
 import { faker } from '@faker-js/faker'
 
 const DB_FILE_PATH = path.join(process.cwd(), 'src/data/db.json')
-const TOTAL_USERS = 240000
+const TOTAL_USERS = 2400
 
 const roleProfiles = [
   {

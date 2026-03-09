@@ -22,7 +22,7 @@ const DB_FILE_PATH = path.join(process.cwd(), 'src/data/db.json')
 const delay = (ms = 500) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export async function readDB() {
-  await delay()
+  await delay(150)
   const file = await fs.readFile(DB_FILE_PATH, 'utf-8')
   const parsed = JSON.parse(file)
   return usersSchema.parse(parsed)

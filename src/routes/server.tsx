@@ -196,6 +196,7 @@ function ServerTablePage() {
     if (data.page !== search.page) {
       navigate({
         replace: true,
+        resetScroll: false,
         search: (prev) => ({
           ...prev,
           page: data.page,
@@ -259,6 +260,7 @@ function ServerTablePage() {
   const applyFilters = () => {
     navigate({
       replace: true,
+      resetScroll: false,
       search: (prev) => ({
         ...prev,
         ...draftFilters,
@@ -280,6 +282,7 @@ function ServerTablePage() {
       const nextSort = nextSorting[0]
 
       navigate({
+        resetScroll: false,
         search: (prev) => ({
           ...prev,
           sortBy: (nextSort?.id as UsersQuery['sortBy']) ?? '',
@@ -302,6 +305,7 @@ function ServerTablePage() {
     const pageSize = Number(value)
 
     navigate({
+      resetScroll: false,
       search: (prev) => ({
         ...prev,
         pageSize,
@@ -344,6 +348,7 @@ function ServerTablePage() {
             setDraftFilters(EMPTY_USER_FILTERS)
             navigate({
               replace: true,
+              resetScroll: false,
               search: (prev) => ({
                 ...prev,
                 ...EMPTY_USER_FILTERS,
@@ -407,6 +412,7 @@ function ServerTablePage() {
               variant="outline"
               onClick={() =>
                 navigate({
+                  resetScroll: false,
                   search: (prev) => ({
                     ...prev,
                     page: Math.max(1, prev.page - 1),
@@ -421,6 +427,7 @@ function ServerTablePage() {
               variant="outline"
               onClick={() =>
                 navigate({
+                  resetScroll: false,
                   search: (prev) => ({
                     ...prev,
                     page: Math.min(data.pageCount, prev.page + 1),
