@@ -65,6 +65,17 @@ function getSortingFromQuery(query: UsersQuery): SortingState {
   return [{ id: query.sortBy, desc: query.sortDir === 'desc' }]
 }
 
+function buildDraftPreviewQuery(
+  search: UsersQuery,
+  draftFilters: UserFilters,
+): UsersQuery {
+  return {
+    ...search,
+    ...draftFilters,
+    page: 1,
+  }
+}
+
 function sortableHeader(label: string) {
   return ({
     column,
@@ -167,6 +178,14 @@ function ServerTablePage() {
     placeholderData: keepPreviousData,
   })
   const data = dataQuery.data
+  const draftPreviewQuery = React.useMemo(
+    () => buildDraftPreviewQuery(search, draftFilters),
+    [search, draftFilters],
+  )
+  const draftPreviewData = useQuery({
+    ...usersQueryOptions(draftPreviewQuery),
+    placeholderData: keepPreviousData,
+  }).data
 
   React.useEffect(() => {
     setDraftFilters(getFiltersFromQuery(search))
@@ -315,8 +334,8 @@ function ServerTablePage() {
   }
 
   const currentPage = data?.page ?? search.page
-  const currentFilters = getFiltersFromQuery(search)
-  const activeFilterCount = getActiveFilterCount(currentFilters)
+  const previewData = draftPreviewData ?? data
+  const activeFilterCount = getActiveFilterCount(draftFilters)
 
   if (!data) return null
 
@@ -336,10 +355,10 @@ function ServerTablePage() {
       <div className="island-shell rounded-xl p-4 md:p-5">
         <UserFiltersPanel
           filters={draftFilters}
-          facets={data.facets}
+          facets={previewData?.facets ?? data.facets}
           activeFilterCount={activeFilterCount}
-          resultCount={data.totalCount}
-          totalCount={data.datasetCount}
+          resultCount={previewData?.totalCount ?? data.totalCount}
+          totalCount={previewData?.datasetCount ?? data.datasetCount}
           modeLabel="Server-side query state"
           onTextChange={updateTextFilter}
           onStatusChange={updateStatusFilter}
