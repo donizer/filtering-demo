@@ -4,7 +4,11 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import {
+  createFileRoute,
+  stripSearchParams,
+  useNavigate,
+} from '@tanstack/react-router'
 import {
   useQuery,
   useQueryClient,
@@ -66,6 +70,9 @@ function areFiltersEqual(left: UserFilters, right: UserFilters) {
 
 export const Route = createFileRoute('/advanced-filtering/server')({
   validateSearch: usersQuerySchema,
+  search: {
+    middlewares: [stripSearchParams(usersQuerySchema.parse({}))],
+  },
   loaderDeps: ({ search }) => search,
   loader: async ({ deps, context }) => {
     await context.queryClient.prefetchQuery(usersQueryOptions(deps))

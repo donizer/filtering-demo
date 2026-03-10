@@ -6,7 +6,11 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import {
+  createFileRoute,
+  stripSearchParams,
+  useNavigate,
+} from '@tanstack/react-router'
 
 import { UserFiltersPanel } from '#/components/user-filters-panel'
 import { Button } from '#/components/ui/button'
@@ -44,6 +48,9 @@ import {
 
 export const Route = createFileRoute('/advanced-filtering/client')({
   validateSearch: usersQuerySchema,
+  search: {
+    middlewares: [stripSearchParams(usersQuerySchema.parse({}))],
+  },
   loader: () => fetchAllUsers(),
   component: ClientTablePage,
 })
