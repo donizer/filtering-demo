@@ -72,9 +72,32 @@ function FullExamplePage() {
 
   const data = scenario === 'empty' ? [] : viewModel
 
+  React.useEffect(() => {
+    const maxPageIndex =
+      data.length === 0 ? 0 : Math.ceil(data.length / pagination.pageSize) - 1
+
+    if (pagination.pageIndex > maxPageIndex) {
+      setPagination((current) =>
+        current.pageIndex === maxPageIndex
+          ? current
+          : {
+              ...current,
+              pageIndex: maxPageIndex,
+            },
+      )
+    }
+  }, [data.length, pagination.pageIndex, pagination.pageSize])
+
+  React.useEffect(() => {
+    if (scenario === 'empty') {
+      setSelectedUserId(null)
+    }
+  }, [scenario])
+
   const table = useReactTable({
     data,
     columns,
+    autoResetPageIndex: false,
     state: {
       sorting,
       pagination,

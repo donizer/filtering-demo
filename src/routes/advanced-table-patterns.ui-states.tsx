@@ -29,9 +29,28 @@ function TableUiStatesPage() {
     pageSize: 5,
   })
 
+  const data = scenario === 'empty' ? [] : users
+
+  React.useEffect(() => {
+    const maxPageIndex =
+      data.length === 0 ? 0 : Math.ceil(data.length / pagination.pageSize) - 1
+
+    if (pagination.pageIndex > maxPageIndex) {
+      setPagination((current) =>
+        current.pageIndex === maxPageIndex
+          ? current
+          : {
+              ...current,
+              pageIndex: maxPageIndex,
+            },
+      )
+    }
+  }, [data.length, pagination.pageIndex, pagination.pageSize])
+
   const table = useReactTable({
-    data: scenario === 'empty' ? [] : users,
+    data,
     columns: userTableColumns,
+    autoResetPageIndex: false,
     state: {
       sorting,
       pagination,
