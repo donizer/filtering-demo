@@ -82,8 +82,8 @@ export function FilteringPatterns() {
             <p className="mt-2 text-sm text-(--sea-ink-soft)">
               {pattern.description}
             </p>
-            <pre className="mt-4 overflow-x-auto rounded-xl p-4 text-xs leading-6">
-              <code>{pattern.example}</code>
+            <pre className="mt-4 bg-border rounded-xl p-4 text-xs leading-6 whitespace-pre-wrap wrap-break-word">
+              <code className="wrap-anywhere">{pattern.example}</code>
             </pre>
           </article>
         ))}
