@@ -170,10 +170,7 @@ function GroupedRowsPage() {
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    className="sticky top-21 z-10 bg-[rgba(251,255,248,0.95)] backdrop-blur-md"
-                  >
+                  <TableHead key={header.id}>
                     {header.isPlaceholder
                       ? null
                       : flexRender(

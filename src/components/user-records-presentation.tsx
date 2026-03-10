@@ -34,7 +34,6 @@ import {
   getUserStatusTone,
 } from '#/components/user-table-columns'
 import type { UserRecord } from '#/data/user-model'
-import { cn } from '#/lib/utils'
 
 interface PagerConfig {
   page: number
@@ -60,13 +59,9 @@ interface UserRecordsPresentationProps {
   renderRowActions?: (user: UserRecord) => ReactNode
 }
 
-const stickyTableHeadClass =
-  'sticky top-21 z-10 bg-[rgba(251,255,248,0.95)] backdrop-blur-md'
-
 export function UserRecordsPresentation({
   table,
   colSpan,
-  stickyHeader = false,
   loading = false,
   errorMessage,
   emptyTitle = 'No rows to show',
@@ -109,10 +104,7 @@ export function UserRecordsPresentation({
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    className={cn(stickyHeader && stickyTableHeadClass)}
-                  >
+                  <TableHead key={header.id}>
                     {header.isPlaceholder
                       ? null
                       : flexRender(
