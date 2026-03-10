@@ -25,6 +25,7 @@ import {
 } from '#/components/user-table-columns'
 import { fetchAllUsers } from '#/data/user-demo-server'
 import type { UserRecord } from '#/data/user-model'
+import { cn } from '#/lib/utils'
 
 type DepartmentRow = {
   id: string
@@ -59,7 +60,7 @@ const columns: ColumnDef<DepartmentRow>[] = [
           {row.getCanExpand() ? (
             <button
               type="button"
-              className="inline-flex size-8 items-center justify-center rounded-md border border-(--line) bg-white/80"
+              className="inline-flex size-8 items-center justify-center rounded-md border border-(--line) bg-(--surface-strong)"
               onClick={row.getToggleExpandedHandler()}
             >
               {row.getIsExpanded() ? (
@@ -69,7 +70,7 @@ const columns: ColumnDef<DepartmentRow>[] = [
               )}
             </button>
           ) : (
-            <span className="inline-flex size-8 items-center justify-center rounded-md bg-[rgba(79,184,178,0.12)] text-(--sea-ink-soft)">
+            <span className="inline-flex size-8 items-center justify-center rounded-md bg-(--group-accent-bg) text-(--sea-ink-soft)">
               •
             </span>
           )}
@@ -109,7 +110,7 @@ const columns: ColumnDef<DepartmentRow>[] = [
     header: 'Status snapshot',
     cell: ({ row }) => (
       <span
-        className={`inline-flex rounded-full border px-2 py-1 text-xs font-semibold ${row.original.isGroup ? 'border-[rgba(79,184,178,0.18)] bg-[rgba(79,184,178,0.12)] text-(--sea-ink)' : getUserStatusTone(row.original.statusTone ?? 'inactive')}`}
+        className={`inline-flex rounded-full border px-2 py-1 text-xs font-semibold ${row.original.isGroup ? 'border-(--group-accent-border) bg-(--group-accent-bg) text-(--sea-ink)' : getUserStatusTone(row.original.statusTone ?? 'inactive')}`}
       >
         {row.original.statusLabel}
       </span>
@@ -164,13 +165,16 @@ function GroupedRowsPage() {
         </article>
       </div>
 
-      <div className="hidden rounded-2xl border border-(--line) bg-white/70 lg:block">
-        <Table>
-          <TableHeader>
+      <div className="hidden rounded-2xl overflow-hidden border border-(--line) bg-white/70 lg:block">
+        <Table containerClassName="max-h-128 overflow-auto">
+          <TableHeader className="[&_tr]:border-b-0">
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="border-b-0">
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead
+                    key={header.id}
+                    className="sticky top-0 z-20 bg-(--header-bg) backdrop-blur-md shadow-[inset_0_-1px_0_var(--sticky-divider)]"
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -186,10 +190,18 @@ function GroupedRowsPage() {
             {table.getRowModel().rows.map((row) => (
               <TableRow
                 key={row.id}
-                className={row.depth === 0 ? 'bg-[rgba(79,184,178,0.06)]' : ''}
+                className={cn({
+                  'border-b-0 bg-(--group-row-bg)': row.depth === 0,
+                })}
               >
                 {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
+                  <TableCell
+                    key={cell.id}
+                    className={cn({
+                      'sticky top-10 z-5 bg-(--group-row-sticky-bg) backdrop-blur-md shadow-[inset_0_-1px_0_var(--sticky-divider)]':
+                        row.depth === 0,
+                    })}
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}

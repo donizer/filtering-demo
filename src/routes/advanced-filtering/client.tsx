@@ -232,13 +232,16 @@ function ClientTablePage() {
           }}
         />
 
-        <div className="mt-5 overflow-x-auto rounded-xl border border-(--line) bg-white/65">
-          <Table>
+        <div className="mt-5 rounded-xl border border-(--line) bg-white/65">
+          <Table containerClassName="max-h-128 overflow-auto">
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
+                    <TableHead
+                      key={header.id}
+                      className="sticky top-0 z-10 bg-(--header-bg) backdrop-blur-md"
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(

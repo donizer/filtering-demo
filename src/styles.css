@@ -23,6 +23,11 @@
   --header-bg: rgba(251, 255, 248, 0.84);
   --chip-bg: rgba(255, 255, 255, 0.8);
   --chip-line: rgba(47, 106, 74, 0.18);
+  --group-accent-bg: color-mix(in oklab, var(--lagoon) 12%, white);
+  --group-accent-border: color-mix(in oklab, var(--lagoon) 26%, var(--line));
+  --group-row-bg: color-mix(in oklab, var(--lagoon) 8%, white);
+  --group-row-sticky-bg: color-mix(in oklab, var(--lagoon) 12%, white);
+  --sticky-divider: color-mix(in oklab, var(--lagoon) 18%, var(--line));
   --link-bg-hover: rgba(255, 255, 255, 0.9);
   --hero-a: rgba(79, 184, 178, 0.36);
   --hero-b: rgba(47, 106, 74, 0.2);
@@ -79,6 +84,11 @@
   --header-bg: rgba(10, 20, 24, 0.8);
   --chip-bg: rgba(13, 28, 32, 0.9);
   --chip-line: rgba(141, 229, 219, 0.24);
+  --group-accent-bg: color-mix(in oklab, var(--lagoon) 16%, var(--surface-strong));
+  --group-accent-border: color-mix(in oklab, var(--lagoon) 24%, var(--line));
+  --group-row-bg: color-mix(in oklab, var(--lagoon) 10%, var(--surface-strong));
+  --group-row-sticky-bg: color-mix(in oklab, var(--lagoon) 14%, var(--surface-strong));
+  --sticky-divider: color-mix(in oklab, var(--lagoon) 24%, var(--line));
   --link-bg-hover: rgba(24, 44, 49, 0.8);
   --hero-a: rgba(96, 215, 207, 0.18);
   --hero-b: rgba(110, 200, 154, 0.12);
