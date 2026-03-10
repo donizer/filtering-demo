@@ -6,11 +6,9 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import type { ColumnDef, SortingState } from '@tanstack/react-table'
+import type { SortingState } from '@tanstack/react-table'
 import { createFileRoute } from '@tanstack/react-router'
-import { createServerFn } from '@tanstack/react-start'
 
-import { SortableColumnHeader } from '#/components/sortable-column-header'
 import { UserFiltersPanel } from '#/components/user-filters-panel'
 import { Button } from '#/components/ui/button'
 import {
@@ -28,7 +26,8 @@ import {
   TableHeader,
   TableRow,
 } from '#/components/ui/table'
-
+import { userTableColumns } from '#/components/user-table-columns'
+import { fetchAllUsers } from '#/data/user-demo-server'
 import {
   buildUserFacets,
   filterUsers,
@@ -37,81 +36,10 @@ import {
 import { EMPTY_USER_FILTERS } from '#/data/user-model'
 import type { UserFilters, UserRecord } from '#/data/user-model'
 
-const fetchAllUsers = createServerFn({ method: 'GET' }).handler(async () => {
-  const { readDB } = await import('#/data/db-utils')
-  return readDB()
-})
-
-export const Route = createFileRoute('/client')({
+export const Route = createFileRoute('/advanced-filtering/client')({
   loader: () => fetchAllUsers(),
   component: ClientTablePage,
 })
-
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  maximumFractionDigits: 0,
-})
-
-const dateFormatter = new Intl.DateTimeFormat('uk-UA', {
-  dateStyle: 'medium',
-})
-
-function sortableHeader(label: string): ColumnDef<UserRecord>['header'] {
-  return ({ column }) => (
-    <SortableColumnHeader
-      label={label}
-      sortDirection={column.getIsSorted()}
-      onClick={column.getToggleSortingHandler()}
-    />
-  )
-}
-
-const columns: ColumnDef<UserRecord>[] = [
-  {
-    accessorKey: 'id',
-    header: sortableHeader('ID'),
-  },
-  {
-    accessorKey: 'name',
-    header: sortableHeader('Name'),
-  },
-  {
-    accessorKey: 'role',
-    header: sortableHeader('Role'),
-  },
-  {
-    accessorKey: 'department',
-    header: sortableHeader('Department'),
-  },
-  {
-    accessorKey: 'country',
-    header: sortableHeader('Country'),
-  },
-  {
-    accessorKey: 'age',
-    header: sortableHeader('Age'),
-  },
-  {
-    accessorKey: 'salary',
-    header: sortableHeader('Salary'),
-    cell: ({ row }) => currencyFormatter.format(row.original.salary),
-  },
-  {
-    accessorKey: 'joinedAt',
-    header: sortableHeader('Joined'),
-    cell: ({ row }) => dateFormatter.format(new Date(row.original.joinedAt)),
-  },
-  {
-    accessorKey: 'status',
-    header: sortableHeader('Status'),
-    cell: ({ row }) => (
-      <span className="rounded-full border border-(--line) px-2 py-1 text-xs font-semibold capitalize">
-        {row.original.status}
-      </span>
-    ),
-  },
-]
 
 function ClientTablePage() {
   const users = Route.useLoaderData()
@@ -138,7 +66,7 @@ function ClientTablePage() {
 
   const table = useReactTable({
     data: filteredUsers,
-    columns,
+    columns: userTableColumns,
     autoResetPageIndex: false,
     state: {
       pagination,
@@ -225,9 +153,9 @@ function ClientTablePage() {
   return (
     <section className="space-y-4">
       <header className="space-y-2">
-        <h1 className="display-title text-3xl font-semibold">
+        <h2 className="display-title text-2xl font-semibold md:text-3xl">
           Client-side filtering
-        </h1>
+        </h2>
         <p className="text-sm text-(--sea-ink-soft)">
           Дані завантажуються один раз. Далі всі фільтри застосовуються у
           браузері через явні JS-предикати, а fuzzy search працює локально.
@@ -280,7 +208,7 @@ function ClientTablePage() {
               {table.getRowModel().rows.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={columns.length}
+                    colSpan={userTableColumns.length}
                     className="h-20 text-center"
                   >
                     No users found.

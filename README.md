@@ -1,28 +1,48 @@
-Welcome to your new TanStack Start app!
+# Filtering Demo Course Repo
 
-# Getting Started
+This repository is now structured as a two-part lecture app:
 
-To run this application:
+1. `Advanced Table Patterns`
+2. `Advanced Filtering`
+
+The first section teaches how to work with complex data and TanStack Table without introducing filters. The second section reuses the same dataset and table foundation, then layers on client-side and server-side filtering patterns.
+
+## Getting Started
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-`pnpm dev` regenerates `src/data/db.json` with Faker before starting Vite, so the
-demo always boots with a fresh dataset that includes text, categorical, numeric,
-and date fields for richer filtering examples.
+`pnpm dev` regenerates `src/data/db.json` with Faker before starting Vite, so the app always boots with a fresh dataset that includes text, categorical, numeric, and date fields.
 
-# Demo Scope
+## App Structure
 
-The demo compares two approaches:
+### Section 1: Advanced Table Patterns
 
-- Client-side filtering: one fetch, local fuzzy search, faceted counts, and
-  composite column filters in the browser.
-- Server-side filtering: URL-driven query state, server filtering, server
-  facets, and paginated responses.
+Routes in this section:
 
-Patterns showcased in the UI:
+- `/advanced-table-patterns/overview` — TanStack Table overview with sorting and pagination
+- `/advanced-table-patterns/grouped-rows` — grouped rows and expandable complex data
+- `/advanced-table-patterns/responsive` — mobile layout without horizontal scrolling
+- `/advanced-table-patterns/ui-states` — loading, empty, error, and ready states
+- `/advanced-table-patterns/date-picker` — mobile-optimized date picker inside a row details flow
+- `/advanced-table-patterns/full-example` — combined non-filtering reference example
+
+Design rule for this section:
+
+- No filtering controls
+- No faceting
+- No URL-driven filter state
+
+### Section 2: Advanced Filtering
+
+Routes in this section:
+
+- `/advanced-filtering/client` — one fetch, local predicates, fuzzy search, faceted counts
+- `/advanced-filtering/server` — URL-driven filter state, server pagination, server sorting, server facets
+
+Filtering patterns shown in the second section:
 
 - Exact match
 - Range / boundaries
@@ -32,201 +52,58 @@ Patterns showcased in the UI:
 - Faceted filtering
 - Composite filtering
 
-# Building For Production
+## Shared Data Model
 
-To build this application for production:
+The app reuses one primary user dataset across both sections.
+
+Core fields:
+
+- `id`
+- `name`
+- `role`
+- `department`
+- `country`
+- `age`
+- `salary`
+- `joinedAt`
+- `status`
+
+Relevant source files:
+
+- `src/data/user-model.ts` — schema, enums, and types
+- `src/data/db-utils.ts` — DB loading and paginated querying
+- `src/data/user-demo-server.ts` — server functions shared by the lecture pages
+- `src/components/user-table-columns.tsx` — shared table columns and formatters
+
+## Development Notes
+
+- Global app shell lives in `src/routes/__root.tsx`.
+- Section layouts live in `src/routes/advanced-table-patterns.tsx` and `src/routes/advanced-filtering.tsx`.
+- Filtering logic stays isolated in `src/data/user-filters.ts` and `src/components/user-filters-panel.tsx`.
+- The mobile date picker is implemented in `src/components/mobile-date-picker.tsx` and reused in a row-details drawer.
+
+## Build, Lint, Test
 
 ```bash
 pnpm build
-```
-
-## Testing
-
-This project uses [Vitest](https://vitest.dev/) for testing. You can run the tests with:
-
-```bash
+pnpm lint
 pnpm test
 ```
 
-## Styling
-
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
-
-### Removing Tailwind CSS
-
-If you prefer not to use Tailwind CSS:
-
-1. Remove the demo pages in `src/routes/demo/`
-2. Replace the Tailwind import in `src/styles.css` with your own styles
-3. Remove `tailwindcss()` from the plugins array in `vite.config.ts`
-4. Uninstall the packages: `pnpm add @tailwindcss/vite tailwindcss --dev`
-
-## Linting & Formatting
-
-This project uses [eslint](https://eslint.org/) and [prettier](https://prettier.io/) for linting and formatting. Eslint is configured using [tanstack/eslint-config](https://tanstack.com/config/latest/docs/eslint). The following scripts are available:
+Available formatting helpers:
 
 ```bash
-pnpm lint
 pnpm format
 pnpm check
 ```
 
-## Shadcn
+## Styling
 
-Add components using the latest version of [Shadcn](https://ui.shadcn.com/).
+The project uses Tailwind CSS plus the local UI component layer in `src/components/ui/`.
 
-```bash
-pnpm dlx shadcn@latest add button
-```
+The app intentionally uses different presentation strategies for large and small screens:
 
-## Routing
+- dense tables on large screens
+- prioritised cards and details flows on smaller screens
 
-This project uses [TanStack Router](https://tanstack.com/router) with file-based routing. Routes are managed as files in `src/routes`.
-
-### Adding A Route
-
-To add a new route to your application just add a new file in the `./src/routes` directory.
-
-TanStack will automatically generate the content of the route file for you.
-
-Now that you have two routes you can use a `Link` component to navigate between them.
-
-### Adding Links
-
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
-
-```tsx
-import { Link } from '@tanstack/react-router'
-```
-
-Then anywhere in your JSX you can use it like so:
-
-```tsx
-<Link to="/about">About</Link>
-```
-
-This will create a link that will navigate to the `/about` route.
-
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
-
-### Using A Layout
-
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you render `{children}` in the `shellComponent`.
-
-Here is an example layout that includes a header:
-
-```tsx
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
-
-export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'My App' },
-    ],
-  }),
-  shellComponent: ({ children }) => (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        <header>
-          <nav>
-            <Link to="/">Home</Link>
-            <Link to="/about">About</Link>
-          </nav>
-        </header>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  ),
-})
-```
-
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
-
-## Server Functions
-
-TanStack Start provides server functions that allow you to write server-side code that seamlessly integrates with your client components.
-
-```tsx
-import { createServerFn } from '@tanstack/react-start'
-
-const getServerTime = createServerFn({
-  method: 'GET',
-}).handler(async () => {
-  return new Date().toISOString()
-})
-
-// Use in a component
-function MyComponent() {
-  const [time, setTime] = useState('')
-
-  useEffect(() => {
-    getServerTime().then(setTime)
-  }, [])
-
-  return <div>Server time: {time}</div>
-}
-```
-
-## API Routes
-
-You can create API routes by using the `server` property in your route definitions:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-import { json } from '@tanstack/react-start'
-
-export const Route = createFileRoute('/api/hello')({
-  server: {
-    handlers: {
-      GET: () => json({ message: 'Hello, World!' }),
-    },
-  },
-})
-```
-
-## Data Fetching
-
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
-
-For example:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-
-export const Route = createFileRoute('/people')({
-  loader: async () => {
-    const response = await fetch('https://swapi.dev/api/people')
-    return response.json()
-  },
-  component: PeopleComponent,
-})
-
-function PeopleComponent() {
-  const data = Route.useLoaderData()
-  return (
-    <ul>
-      {data.results.map((person) => (
-        <li key={person.name}>{person.name}</li>
-      ))}
-    </ul>
-  )
-}
-```
-
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
-
-# Demo files
-
-Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
-
-# Learn More
-
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
-
-For TanStack Start specific documentation, visit [TanStack Start](https://tanstack.com/start).
+This is especially important for the `Advanced Table Patterns` section, where the mobile examples are meant to avoid horizontal scrolling.

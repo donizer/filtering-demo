@@ -4,11 +4,14 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import type { ColumnDef, SortingState } from '@tanstack/react-table'
+import type { SortingState } from '@tanstack/react-table'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { createServerFn } from '@tanstack/react-start'
+import {
+  useQuery,
+  useQueryClient,
+  keepPreviousData,
+} from '@tanstack/react-query'
 
-import { SortableColumnHeader } from '#/components/sortable-column-header'
 import { UserFiltersPanel } from '#/components/user-filters-panel'
 import { Button } from '#/components/ui/button'
 import {
@@ -26,25 +29,11 @@ import {
   TableHeader,
   TableRow,
 } from '#/components/ui/table'
-
+import { userTableColumns } from '#/components/user-table-columns'
 import { getActiveFilterCount } from '#/data/user-filters'
+import { usersQueryOptions } from '#/data/user-demo-server'
 import { EMPTY_USER_FILTERS, usersQuerySchema } from '#/data/user-model'
 import type { UserFilters, UserRecord, UsersQuery } from '#/data/user-model'
-import {
-  useQuery,
-  useQueryClient,
-  keepPreviousData,
-} from '@tanstack/react-query'
-
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  maximumFractionDigits: 0,
-})
-
-const dateFormatter = new Intl.DateTimeFormat('uk-UA', {
-  dateStyle: 'medium',
-})
 
 function getFiltersFromQuery(query: UsersQuery): UserFilters {
   const {
@@ -99,40 +88,7 @@ function areFiltersEqual(left: UserFilters, right: UserFilters) {
   )
 }
 
-function sortableHeader(label: string) {
-  return ({
-    column,
-  }: {
-    column: {
-      getIsSorted: () => false | 'asc' | 'desc'
-      getToggleSortingHandler: () =>
-        | React.MouseEventHandler<HTMLButtonElement>
-        | undefined
-    }
-  }) => (
-    <SortableColumnHeader
-      label={label}
-      sortDirection={column.getIsSorted()}
-      onClick={column.getToggleSortingHandler()}
-    />
-  )
-}
-
-const fetchUsersPaginated = createServerFn({ method: 'GET' })
-  .inputValidator(usersQuerySchema)
-  .handler(async ({ data }) => {
-    const { queryUsers } = await import('#/data/db-utils')
-    return queryUsers(data)
-  })
-
-function usersQueryOptions(params: UsersQuery) {
-  return {
-    queryKey: ['users', params] as const,
-    queryFn: () => fetchUsersPaginated({ data: params }),
-  }
-}
-
-export const Route = createFileRoute('/server')({
+export const Route = createFileRoute('/advanced-filtering/server')({
   validateSearch: usersQuerySchema,
   loaderDeps: ({ search }) => search,
   loader: async ({ deps, context }) => {
@@ -140,52 +96,6 @@ export const Route = createFileRoute('/server')({
   },
   component: ServerTablePage,
 })
-
-const columns: ColumnDef<UserRecord>[] = [
-  {
-    accessorKey: 'id',
-    header: sortableHeader('ID'),
-  },
-  {
-    accessorKey: 'name',
-    header: sortableHeader('Name'),
-  },
-  {
-    accessorKey: 'role',
-    header: sortableHeader('Role'),
-  },
-  {
-    accessorKey: 'department',
-    header: sortableHeader('Department'),
-  },
-  {
-    accessorKey: 'country',
-    header: sortableHeader('Country'),
-  },
-  {
-    accessorKey: 'age',
-    header: sortableHeader('Age'),
-  },
-  {
-    accessorKey: 'salary',
-    header: sortableHeader('Salary'),
-    cell: ({ row }) => currencyFormatter.format(row.original.salary),
-  },
-  {
-    accessorKey: 'joinedAt',
-    header: sortableHeader('Joined'),
-    cell: ({ row }) => dateFormatter.format(new Date(row.original.joinedAt)),
-  },
-  {
-    accessorKey: 'status',
-    header: sortableHeader('Status'),
-    cell: ({ row }) => (
-      <span className="rounded-full border border-(--line) px-2 py-1 text-xs font-semibold capitalize">
-        {row.original.status}
-      </span>
-    ),
-  },
-]
 
 function ServerTablePage() {
   const search = Route.useSearch()
@@ -214,7 +124,6 @@ function ServerTablePage() {
     setDraftFilters(getFiltersFromQuery(search))
   }, [search])
 
-  // Prefetch adjacent pages
   React.useEffect(() => {
     if (!dataQuery.data) return
 
@@ -313,7 +222,7 @@ function ServerTablePage() {
 
   const table = useReactTable({
     data: data?.items ?? [],
-    columns,
+    columns: userTableColumns,
     getCoreRowModel: getCoreRowModel(),
     manualFiltering: true,
     manualPagination: true,
@@ -322,13 +231,15 @@ function ServerTablePage() {
       const nextSorting =
         typeof updater === 'function' ? updater(sorting) : updater
       const nextSort = nextSorting[0]
+      const sortBy = nextSort ? (nextSort.id as UsersQuery['sortBy']) : ''
+      const sortDir = nextSort?.desc ? 'desc' : 'asc'
 
       navigate({
         resetScroll: false,
         search: (prev) => ({
           ...prev,
-          sortBy: (nextSort?.id as UsersQuery['sortBy']) ?? '',
-          sortDir: nextSort?.desc ? 'desc' : 'asc',
+          sortBy,
+          sortDir,
           page: 1,
         }),
       })
@@ -370,9 +281,9 @@ function ServerTablePage() {
   return (
     <section className="space-y-4">
       <header className="space-y-2">
-        <h1 className="display-title text-3xl font-semibold">
+        <h2 className="display-title text-2xl font-semibold md:text-3xl">
           Server-side filtering
-        </h1>
+        </h2>
         <p className="text-sm text-(--sea-ink-soft)">
           URL керує фільтрами та пагінацією. Сервер застосовує ті самі
           предикати, що і клієнтський демо-режим, але повертає тільки потрібну
@@ -430,7 +341,7 @@ function ServerTablePage() {
               {table.getRowModel().rows.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={columns.length}
+                    colSpan={userTableColumns.length}
                     className="h-20 text-center"
                   >
                     No users found.

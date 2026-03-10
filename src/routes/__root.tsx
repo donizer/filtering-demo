@@ -31,7 +31,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'Filtering Demo | TanStack Table + Router',
+        title: 'Table Patterns and Filtering | TanStack Table + Router',
       },
     ],
     links: [
@@ -54,7 +54,7 @@ function RootLayout() {
             to="/"
             className="display-title text-lg font-semibold tracking-tight text-(--sea-ink) no-underline"
           >
-            Filtering Demo
+            Table Patterns Demo
           </Link>
 
           <nav className="flex items-center gap-5 text-sm font-medium">
@@ -66,18 +66,18 @@ function RootLayout() {
               Home
             </Link>
             <Link
-              to="/client"
+              to="/advanced-table-patterns"
               className="nav-link"
               activeProps={{ className: 'nav-link is-active' }}
             >
-              Client Filtering
+              Advanced Table Patterns
             </Link>
             <Link
-              to="/server"
+              to="/advanced-filtering"
               className="nav-link"
               activeProps={{ className: 'nav-link is-active' }}
             >
-              Server Filtering
+              Advanced Filtering
             </Link>
           </nav>
         </div>
@@ -89,7 +89,7 @@ function RootLayout() {
 
       <footer className="site-footer mt-8">
         <div className="page-wrap py-4 text-sm text-(--sea-ink-soft)">
-          TanStack Start demo: client-side vs server-side filtering
+          TanStack Start demo: advanced table patterns before advanced filtering
         </div>
       </footer>
     </div>

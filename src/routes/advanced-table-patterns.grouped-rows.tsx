@@ -1,0 +1,338 @@
+import * as React from 'react'
+import {
+  flexRender,
+  getCoreRowModel,
+  getExpandedRowModel,
+  useReactTable,
+} from '@tanstack/react-table'
+import type { ColumnDef } from '@tanstack/react-table'
+import { ChevronDown, ChevronRight } from 'lucide-react'
+import { createFileRoute } from '@tanstack/react-router'
+
+import { Button } from '#/components/ui/button'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '#/components/ui/table'
+import {
+  formatUserJoinedAt,
+  formatUserSalary,
+  getUserStatusTone,
+} from '#/components/user-table-columns'
+import { fetchAllUsers } from '#/data/user-demo-server'
+import type { UserRecord } from '#/data/user-model'
+
+type DepartmentRow = {
+  id: string
+  label: string
+  summary: string
+  countrySpread: string
+  salaryValue: number
+  joinedAt: string
+  statusLabel: string
+  statusTone?: UserRecord['status']
+  subRows?: DepartmentRow[]
+  isGroup: boolean
+}
+
+export const Route = createFileRoute('/advanced-table-patterns/grouped-rows')({
+  loader: () => fetchAllUsers(),
+  component: GroupedRowsPage,
+})
+
+const columns: ColumnDef<DepartmentRow>[] = [
+  {
+    accessorKey: 'label',
+    header: 'Department / member',
+    cell: ({ row, getValue }) => {
+      const value = getValue<string>()
+
+      return (
+        <div
+          className="flex items-center gap-2"
+          style={{ paddingLeft: `${row.depth * 16}px` }}
+        >
+          {row.getCanExpand() ? (
+            <button
+              type="button"
+              className="inline-flex size-8 items-center justify-center rounded-md border border-(--line) bg-white/80"
+              onClick={row.getToggleExpandedHandler()}
+            >
+              {row.getIsExpanded() ? (
+                <ChevronDown className="size-4" />
+              ) : (
+                <ChevronRight className="size-4" />
+              )}
+            </button>
+          ) : (
+            <span className="inline-flex size-8 items-center justify-center rounded-md bg-[rgba(79,184,178,0.12)] text-(--sea-ink-soft)">
+              •
+            </span>
+          )}
+
+          <div>
+            <p className="font-medium text-(--sea-ink)">{value}</p>
+            {row.original.isGroup ? (
+              <p className="text-xs text-(--sea-ink-soft)">
+                Grouped parent row
+              </p>
+            ) : null}
+          </div>
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: 'summary',
+    header: 'Summary',
+  },
+  {
+    accessorKey: 'countrySpread',
+    header: 'Country spread',
+  },
+  {
+    accessorKey: 'salaryValue',
+    header: 'Salary / avg salary',
+    cell: ({ row }) => formatUserSalary(row.original.salaryValue),
+  },
+  {
+    accessorKey: 'joinedAt',
+    header: 'Joined / earliest joined',
+    cell: ({ row }) => formatUserJoinedAt(row.original.joinedAt),
+  },
+  {
+    accessorKey: 'statusLabel',
+    header: 'Status snapshot',
+    cell: ({ row }) => (
+      <span
+        className={`inline-flex rounded-full border px-2 py-1 text-xs font-semibold ${row.original.isGroup ? 'border-[rgba(79,184,178,0.18)] bg-[rgba(79,184,178,0.12)] text-(--sea-ink)' : getUserStatusTone(row.original.statusTone ?? 'inactive')}`}
+      >
+        {row.original.statusLabel}
+      </span>
+    ),
+  },
+]
+
+function GroupedRowsPage() {
+  const users = Route.useLoaderData()
+  const groupedRows = React.useMemo(() => buildDepartmentRows(users), [users])
+
+  const table = useReactTable({
+    data: groupedRows,
+    columns,
+    getSubRows: (row) => row.subRows,
+    getCoreRowModel: getCoreRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
+  })
+
+  return (
+    <div className="space-y-4">
+      <header className="space-y-2">
+        <h2 className="display-title text-2xl font-semibold md:text-3xl">
+          Sticky headers and grouped rows
+        </h2>
+        <p className="max-w-3xl text-sm text-(--sea-ink-soft)">
+          The table starts with flat user records, then projects them into
+          expandable department groups. This is the point where complex data
+          becomes a modeling problem, not just a rendering problem.
+        </p>
+      </header>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <article className="feature-card rounded-2xl border border-(--line) p-5">
+          <p className="island-kicker">Grouped parents</p>
+          <p className="mt-2 text-sm text-(--sea-ink-soft)">
+            Each department row aggregates metrics and owns expandable member
+            rows.
+          </p>
+        </article>
+        <article className="feature-card rounded-2xl border border-(--line) p-5">
+          <p className="island-kicker">Expandable structure</p>
+          <p className="mt-2 text-sm text-(--sea-ink-soft)">
+            TanStack Table reads nested subRows directly through getSubRows.
+          </p>
+        </article>
+        <article className="feature-card rounded-2xl border border-(--line) p-5">
+          <p className="island-kicker">No filters</p>
+          <p className="mt-2 text-sm text-(--sea-ink-soft)">
+            Grouping is used here only to teach data shape and row hierarchy.
+          </p>
+        </article>
+      </div>
+
+      <div className="hidden rounded-2xl border border-(--line) bg-white/70 lg:block">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead
+                    key={header.id}
+                    className="sticky top-21 z-10 bg-[rgba(251,255,248,0.95)] backdrop-blur-md"
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.map((row) => (
+              <TableRow
+                key={row.id}
+                className={row.depth === 0 ? 'bg-[rgba(79,184,178,0.06)]' : ''}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <div className="space-y-3 lg:hidden">
+        {table
+          .getRowModel()
+          .rows.filter((row) => row.depth === 0)
+          .map((row) => (
+            <article
+              key={row.id}
+              className="feature-card rounded-2xl border border-(--line) p-4"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-base font-semibold text-(--sea-ink)">
+                    {row.original.label}
+                  </p>
+                  <p className="mt-1 text-sm text-(--sea-ink-soft)">
+                    {row.original.summary}
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={row.getToggleExpandedHandler()}
+                >
+                  {row.getIsExpanded() ? 'Hide members' : 'Show members'}
+                </Button>
+              </div>
+
+              <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                <MobileSummary
+                  label="Country spread"
+                  value={row.original.countrySpread}
+                />
+                <MobileSummary
+                  label="Average salary"
+                  value={formatUserSalary(row.original.salaryValue)}
+                />
+                <MobileSummary
+                  label="Earliest joined"
+                  value={formatUserJoinedAt(row.original.joinedAt)}
+                />
+                <MobileSummary
+                  label="Status"
+                  value={row.original.statusLabel}
+                />
+              </dl>
+
+              {row.getIsExpanded() ? (
+                <div className="mt-4 space-y-2 rounded-xl border border-(--line) bg-white/65 p-3">
+                  {row.subRows.map((subRow) => (
+                    <div
+                      key={subRow.id}
+                      className="rounded-xl border border-(--line) bg-white/75 p-3"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="font-medium text-(--sea-ink)">
+                            {subRow.original.label}
+                          </p>
+                          <p className="text-sm text-(--sea-ink-soft)">
+                            {subRow.original.summary}
+                          </p>
+                        </div>
+                        <span
+                          className={`inline-flex rounded-full border px-2 py-1 text-xs font-semibold capitalize ${getUserStatusTone(subRow.original.statusTone ?? 'inactive')}`}
+                        >
+                          {subRow.original.statusLabel}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </article>
+          ))}
+      </div>
+    </div>
+  )
+}
+
+function buildDepartmentRows(users: UserRecord[]): DepartmentRow[] {
+  return Object.entries(
+    users.reduce<Record<string, UserRecord[]>>((accumulator, user) => {
+      accumulator[user.department] ??= []
+      accumulator[user.department].push(user)
+      return accumulator
+    }, {}),
+  ).map(([department, members]) => {
+    const activeCount = members.filter(
+      (member) => member.status === 'active',
+    ).length
+    const uniqueCountries = new Set(members.map((member) => member.country))
+      .size
+    const averageSalary = Math.round(
+      members.reduce((sum, member) => sum + member.salary, 0) / members.length,
+    )
+    const earliestJoinedAt = [...members].sort((left, right) =>
+      left.joinedAt.localeCompare(right.joinedAt),
+    )[0]!.joinedAt
+
+    return {
+      id: department,
+      label: department,
+      summary: `${members.length} people · ${new Set(members.map((member) => member.role)).size} roles`,
+      countrySpread: `${uniqueCountries} countries`,
+      salaryValue: averageSalary,
+      joinedAt: earliestJoinedAt,
+      statusLabel: `${activeCount} active`,
+      statusTone: undefined,
+      isGroup: true,
+      subRows: members.map((member) => ({
+        id: `${department}-${member.id}`,
+        label: member.name,
+        summary: `${member.role} · ${member.department}`,
+        countrySpread: member.country,
+        salaryValue: member.salary,
+        joinedAt: member.joinedAt,
+        statusLabel: member.status,
+        statusTone: member.status,
+        isGroup: false,
+      })),
+    }
+  })
+}
+
+function MobileSummary({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-(--line) bg-white/75 p-3">
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-(--sea-ink-soft)">
+        {label}
+      </p>
+      <p className="mt-1 text-sm font-medium text-(--sea-ink)">{value}</p>
+    </div>
+  )
+}
