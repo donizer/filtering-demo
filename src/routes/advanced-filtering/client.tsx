@@ -6,8 +6,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import type { SortingState } from '@tanstack/react-table'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { UserFiltersPanel } from '#/components/user-filters-panel'
 import { Button } from '#/components/ui/button'
@@ -33,22 +32,32 @@ import {
   filterUsers,
   getActiveFilterCount,
 } from '#/data/user-filters'
-import { EMPTY_USER_FILTERS } from '#/data/user-model'
-import type { UserFilters, UserRecord } from '#/data/user-model'
+import { usersQuerySchema } from '#/data/user-model'
+import type { UserFilters, UserRecord, UsersQuery } from '#/data/user-model'
+import {
+  buildEmptyUsersSearch,
+  buildUsersSearchUpdate,
+  getUserFiltersFromQuery,
+  getUserPaginationFromQuery,
+  getUserSortingFromQuery,
+} from '#/data/user-query-state'
 
 export const Route = createFileRoute('/advanced-filtering/client')({
+  validateSearch: usersQuerySchema,
   loader: () => fetchAllUsers(),
   component: ClientTablePage,
 })
 
 function ClientTablePage() {
   const users = Route.useLoaderData()
-  const [filters, setFilters] = React.useState<UserFilters>(EMPTY_USER_FILTERS)
-  const [pagination, setPagination] = React.useState({
-    pageIndex: 0,
-    pageSize: 10,
-  })
-  const [sorting, setSorting] = React.useState<SortingState>([])
+  const search = Route.useSearch()
+  const navigate = useNavigate({ from: Route.fullPath })
+  const filters = React.useMemo(() => getUserFiltersFromQuery(search), [search])
+  const pagination = React.useMemo(
+    () => getUserPaginationFromQuery(search),
+    [search],
+  )
+  const sorting = React.useMemo(() => getUserSortingFromQuery(search), [search])
   const deferredFilters = React.useDeferredValue(filters)
 
   const filteredUsers = React.useMemo(
@@ -72,81 +81,115 @@ function ClientTablePage() {
       pagination,
       sorting,
     },
-    onPaginationChange: setPagination,
+    onPaginationChange: (updater) => {
+      const nextPagination =
+        typeof updater === 'function' ? updater(pagination) : updater
+
+      navigate({
+        replace: true,
+        resetScroll: false,
+        search: buildUsersSearchUpdate(search, {
+          page: nextPagination.pageIndex + 1,
+          pageSize: nextPagination.pageSize,
+        }),
+      })
+    },
     onSortingChange: (updater) => {
-      setSorting(updater)
-      resetToFirstPage()
+      const nextSorting =
+        typeof updater === 'function' ? updater(sorting) : updater
+      const nextSort = nextSorting[0]
+      const sortBy = nextSort ? (nextSort.id as UsersQuery['sortBy']) : ''
+      const sortDir = nextSort?.desc ? 'desc' : 'asc'
+
+      navigate({
+        replace: true,
+        resetScroll: false,
+        search: buildUsersSearchUpdate(search, {
+          sortBy,
+          sortDir,
+          page: 1,
+        }),
+      })
     },
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
   })
 
-  const resetToFirstPage = React.useCallback(() => {
-    setPagination((current) =>
-      current.pageIndex === 0 ? current : { ...current, pageIndex: 0 },
-    )
-  }, [])
-
-  const updateFilters = React.useCallback(
-    (updater: (current: UserFilters) => UserFilters) => {
-      React.startTransition(() => {
-        setFilters((current) => updater(current))
-        resetToFirstPage()
-      })
-    },
-    [resetToFirstPage],
-  )
-
   const updateTextFilter = (key: keyof UserFilters, value: string) => {
-    updateFilters((current) => ({ ...current, [key]: value }))
+    navigate({
+      replace: true,
+      resetScroll: false,
+      search: buildUsersSearchUpdate(search, {
+        ...filters,
+        [key]: value,
+        page: 1,
+      }),
+    })
   }
 
   const updateStatusFilter = (value: UserFilters['status']) => {
-    updateFilters((current) => ({ ...current, status: value }))
+    navigate({
+      replace: true,
+      resetScroll: false,
+      search: buildUsersSearchUpdate(search, {
+        ...filters,
+        status: value,
+        page: 1,
+      }),
+    })
   }
 
   const toggleArrayFilter = (
     key: 'roles' | 'departments' | 'countries',
     value: string,
   ) => {
-    updateFilters((current) => {
+    const nextFilters = (() => {
       switch (key) {
         case 'roles': {
-          const nextValues = current.roles.includes(value as UserRecord['role'])
-            ? current.roles.filter((item) => item !== value)
-            : [...current.roles, value as UserRecord['role']]
+          const nextValues = filters.roles.includes(value as UserRecord['role'])
+            ? filters.roles.filter((item) => item !== value)
+            : [...filters.roles, value as UserRecord['role']]
 
           return {
-            ...current,
+            ...filters,
             roles: nextValues,
           }
         }
         case 'departments': {
-          const nextValues = current.departments.includes(
+          const nextValues = filters.departments.includes(
             value as UserRecord['department'],
           )
-            ? current.departments.filter((item) => item !== value)
-            : [...current.departments, value as UserRecord['department']]
+            ? filters.departments.filter((item) => item !== value)
+            : [...filters.departments, value as UserRecord['department']]
 
           return {
-            ...current,
+            ...filters,
             departments: nextValues,
           }
         }
         case 'countries': {
-          const nextValues = current.countries.includes(
+          const nextValues = filters.countries.includes(
             value as UserRecord['country'],
           )
-            ? current.countries.filter((item) => item !== value)
-            : [...current.countries, value as UserRecord['country']]
+            ? filters.countries.filter((item) => item !== value)
+            : [...filters.countries, value as UserRecord['country']]
 
           return {
-            ...current,
+            ...filters,
             countries: nextValues,
           }
         }
       }
+    })()
+
+    navigate({
+      replace: true,
+      resetScroll: false,
+      search: buildUsersSearchUpdate(search, {
+        ...nextFilters,
+        page: 1,
+      }),
     })
   }
 
@@ -174,13 +217,10 @@ function ClientTablePage() {
           onStatusChange={updateStatusFilter}
           onToggleArrayValue={toggleArrayFilter}
           onReset={() => {
-            React.startTransition(() => {
-              setFilters(EMPTY_USER_FILTERS)
-              setPagination((current) =>
-                current.pageIndex === 0
-                  ? current
-                  : { ...current, pageIndex: 0 },
-              )
+            navigate({
+              replace: true,
+              resetScroll: false,
+              search: buildEmptyUsersSearch(),
             })
           }}
         />

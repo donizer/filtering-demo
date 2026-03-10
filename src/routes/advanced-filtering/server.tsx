@@ -4,7 +4,6 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import type { SortingState } from '@tanstack/react-table'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
   useQuery,
@@ -34,36 +33,13 @@ import { getActiveFilterCount } from '#/data/user-filters'
 import { usersQueryOptions } from '#/data/user-demo-server'
 import { EMPTY_USER_FILTERS, usersQuerySchema } from '#/data/user-model'
 import type { UserFilters, UserRecord, UsersQuery } from '#/data/user-model'
-
-function getFiltersFromQuery(query: UsersQuery): UserFilters {
-  const {
-    page: _page,
-    pageSize: _pageSize,
-    sortBy: _sortBy,
-    sortDir: _sortDir,
-    ...filters
-  } = query
-  return filters
-}
-
-function getSortingFromQuery(query: UsersQuery): SortingState {
-  if (!query.sortBy) {
-    return []
-  }
-
-  return [{ id: query.sortBy, desc: query.sortDir === 'desc' }]
-}
-
-function buildDraftPreviewQuery(
-  search: UsersQuery,
-  draftFilters: UserFilters,
-): UsersQuery {
-  return {
-    ...search,
-    ...draftFilters,
-    page: 1,
-  }
-}
+import {
+  buildDraftUsersQuery,
+  buildEmptyUsersSearch,
+  buildUsersSearchUpdate,
+  getUserFiltersFromQuery,
+  getUserSortingFromQuery,
+} from '#/data/user-query-state'
 
 function areFiltersEqual(left: UserFilters, right: UserFilters) {
   return (
@@ -101,9 +77,9 @@ function ServerTablePage() {
   const search = Route.useSearch()
   const navigate = useNavigate({ from: Route.fullPath })
   const queryClient = useQueryClient()
-  const sorting = React.useMemo(() => getSortingFromQuery(search), [search])
+  const sorting = React.useMemo(() => getUserSortingFromQuery(search), [search])
   const [draftFilters, setDraftFilters] = React.useState<UserFilters>(
-    getFiltersFromQuery(search),
+    getUserFiltersFromQuery(search),
   )
 
   const dataQuery = useQuery({
@@ -112,7 +88,7 @@ function ServerTablePage() {
   })
   const data = dataQuery.data
   const draftPreviewQuery = React.useMemo(
-    () => buildDraftPreviewQuery(search, draftFilters),
+    () => buildDraftUsersQuery(search, draftFilters),
     [search, draftFilters],
   )
   const draftPreviewData = useQuery({
@@ -121,7 +97,7 @@ function ServerTablePage() {
   }).data
 
   React.useEffect(() => {
-    setDraftFilters(getFiltersFromQuery(search))
+    setDraftFilters(getUserFiltersFromQuery(search))
   }, [search])
 
   React.useEffect(() => {
@@ -148,8 +124,7 @@ function ServerTablePage() {
       navigate({
         replace: true,
         resetScroll: false,
-        search: (prev) => ({
-          ...prev,
+        search: buildUsersSearchUpdate(search, {
           page: data.page,
         }),
       })
@@ -212,8 +187,7 @@ function ServerTablePage() {
     navigate({
       replace: true,
       resetScroll: false,
-      search: (prev) => ({
-        ...prev,
+      search: buildUsersSearchUpdate(search, {
         ...draftFilters,
         page: 1,
       }),
@@ -236,8 +210,7 @@ function ServerTablePage() {
 
       navigate({
         resetScroll: false,
-        search: (prev) => ({
-          ...prev,
+        search: buildUsersSearchUpdate(search, {
           sortBy,
           sortDir,
           page: 1,
@@ -259,8 +232,7 @@ function ServerTablePage() {
 
     navigate({
       resetScroll: false,
-      search: (prev) => ({
-        ...prev,
+      search: buildUsersSearchUpdate(search, {
         pageSize,
         page: 1,
       }),
@@ -270,7 +242,7 @@ function ServerTablePage() {
   const currentPage = data?.page ?? search.page
   const previewData = draftPreviewData ?? data
   const appliedFilters = React.useMemo(
-    () => getFiltersFromQuery(search),
+    () => getUserFiltersFromQuery(search),
     [search],
   )
   const activeFilterCount = getActiveFilterCount(draftFilters)
@@ -308,11 +280,7 @@ function ServerTablePage() {
             navigate({
               replace: true,
               resetScroll: false,
-              search: (prev) => ({
-                ...prev,
-                ...EMPTY_USER_FILTERS,
-                page: 1,
-              }),
+              search: buildEmptyUsersSearch(),
             })
           }}
           onApply={applyFilters}
@@ -372,9 +340,8 @@ function ServerTablePage() {
               onClick={() =>
                 navigate({
                   resetScroll: false,
-                  search: (prev) => ({
-                    ...prev,
-                    page: Math.max(1, prev.page - 1),
+                  search: buildUsersSearchUpdate(search, {
+                    page: Math.max(1, search.page - 1),
                   }),
                 })
               }
@@ -387,9 +354,8 @@ function ServerTablePage() {
               onClick={() =>
                 navigate({
                   resetScroll: false,
-                  search: (prev) => ({
-                    ...prev,
-                    page: Math.min(data.pageCount, prev.page + 1),
+                  search: buildUsersSearchUpdate(search, {
+                    page: Math.min(data.pageCount, search.page + 1),
                   }),
                 })
               }
