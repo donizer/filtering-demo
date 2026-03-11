@@ -261,7 +261,7 @@ function ServerTablePage() {
     <section className="space-y-4">
       <header className="space-y-2">
         <h2 className="display-title text-2xl font-semibold md:text-3xl">
-          Server-side filtering
+          Серверна фільтрація
         </h2>
         <p className="text-sm text-(--sea-ink-soft)">
           URL керує фільтрами та пагінацією. Сервер застосовує ті самі
@@ -277,7 +277,7 @@ function ServerTablePage() {
           activeFilterCount={activeFilterCount}
           resultCount={previewData?.totalCount ?? data.totalCount}
           totalCount={previewData?.datasetCount ?? data.datasetCount}
-          modeLabel="Server-side query state"
+          modeLabel="Серверний стан запиту"
           isApplyPending={isApplyPending}
           onTextChange={updateTextFilter}
           onStatusChange={updateStatusFilter}
@@ -322,7 +322,7 @@ function ServerTablePage() {
                     colSpan={userTableColumns.length}
                     className="h-20 text-center"
                   >
-                    No users found.
+                    Користувачів не знайдено.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -357,7 +357,7 @@ function ServerTablePage() {
               }
               disabled={currentPage <= 1}
             >
-              Previous
+              Попередня
             </Button>
             <Button
               variant="outline"
@@ -371,13 +371,13 @@ function ServerTablePage() {
               }
               disabled={currentPage >= data.pageCount}
             >
-              Next
+              Наступна
             </Button>
           </div>
 
           <div className="flex items-center gap-2 text-sm">
             <span>
-              Page {currentPage} of {data.pageCount}
+              Сторінка {currentPage} з {data.pageCount}
             </span>
             <Select
               value={String(search.pageSize)}

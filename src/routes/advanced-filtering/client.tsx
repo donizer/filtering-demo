@@ -204,7 +204,7 @@ function ClientTablePage() {
     <section className="space-y-4">
       <header className="space-y-2">
         <h2 className="display-title text-2xl font-semibold md:text-3xl">
-          Client-side filtering
+          Клієнтська фільтрація
         </h2>
         <p className="text-sm text-(--sea-ink-soft)">
           Дані завантажуються один раз. Далі всі фільтри застосовуються у
@@ -219,7 +219,7 @@ function ClientTablePage() {
           activeFilterCount={activeFilterCount}
           resultCount={filteredUsers.length}
           totalCount={users.length}
-          modeLabel="Client-side predicates"
+          modeLabel="Клієнтські предикати"
           onTextChange={updateTextFilter}
           onStatusChange={updateStatusFilter}
           onToggleArrayValue={toggleArrayFilter}
@@ -261,7 +261,7 @@ function ClientTablePage() {
                     colSpan={userTableColumns.length}
                     className="h-20 text-center"
                   >
-                    No users found.
+                    Користувачів не знайдено.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -289,20 +289,20 @@ function ClientTablePage() {
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
-              Previous
+              Попередня
             </Button>
             <Button
               variant="outline"
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >
-              Next
+              Наступна
             </Button>
           </div>
 
           <div className="flex items-center gap-2 text-sm">
             <span>
-              Page {table.getState().pagination.pageIndex + 1} of{' '}
+              Сторінка {table.getState().pagination.pageIndex + 1} з{' '}
               {table.getPageCount()}
             </span>
             <Select

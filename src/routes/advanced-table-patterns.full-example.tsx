@@ -17,6 +17,13 @@ import type { UserRecord } from '#/data/user-model'
 
 type ExampleScenario = 'ready' | 'loading' | 'empty' | 'error'
 
+const scenarioLabels: Record<ExampleScenario, string> = {
+  ready: 'Готово',
+  loading: 'Завантаження',
+  empty: 'Порожньо',
+  error: 'Помилка',
+}
+
 export const Route = createFileRoute('/advanced-table-patterns/full-example')({
   loader: () => fetchAllUsers(),
   component: FullExamplePage,
@@ -55,14 +62,14 @@ function FullExamplePage() {
       ...userTableColumns,
       {
         id: 'details',
-        header: 'Details',
+        header: 'Деталі',
         cell: ({ row }) => (
           <Button
             variant="outline"
             size="sm"
             onClick={() => openUser(row.original)}
           >
-            Open details
+            Відкрити деталі
           </Button>
         ),
       },
@@ -116,12 +123,12 @@ function FullExamplePage() {
     <div className="space-y-4">
       <header className="space-y-2">
         <h2 className="display-title text-2xl font-semibold md:text-3xl">
-          Full first-section example
+          Повний приклад першого розділу
         </h2>
         <p className="max-w-3xl text-sm text-(--sea-ink-soft)">
-          This page combines the lecture themes: shared columns, sorting,
-          pagination, sticky headers, responsive cards, state handling, and a
-          touch-friendly details drawer with a date picker.
+          Ця сторінка об’єднує теми лекції: спільні колонки, сортування,
+          пагінацію, липкі заголовки, адаптивні картки, роботу зі станами та
+          дружній до touch drawer деталей із вибором дати.
         </p>
       </header>
 
@@ -134,17 +141,17 @@ function FullExamplePage() {
                 variant={scenario === item ? 'default' : 'outline'}
                 onClick={() => setScenario(item)}
               >
-                {item}
+                {scenarioLabels[item]}
               </Button>
             ),
           )}
         </div>
 
         <article className="feature-card rounded-2xl border border-(--line) p-5">
-          <p className="island-kicker">Lecture note</p>
+          <p className="island-kicker">Нотатка до лекції</p>
           <p className="mt-2 text-sm text-(--sea-ink-soft)">
-            The page deliberately stops before filtering. That keeps the first
-            section focused on table mechanics and interaction design.
+            Сторінка навмисно зупиняється до появи фільтрації. Це тримає перший
+            розділ у фокусі на механіці таблиці та дизайні взаємодії.
           </p>
         </article>
       </div>
@@ -156,15 +163,15 @@ function FullExamplePage() {
         loading={scenario === 'loading'}
         errorMessage={
           scenario === 'error'
-            ? 'Simulated failure state for the combined example. This is where you explain retry UI and operational empathy.'
+            ? 'Симульований стан збою для зведеного прикладу. Саме тут варто пояснювати UI повтору та операційну емпатію.'
             : undefined
         }
-        emptyTitle="No rows in the combined example"
-        emptyDescription="The same layout should stay polished even when the dataset is intentionally empty."
+        emptyTitle="У зведеному прикладі немає рядків"
+        emptyDescription="Той самий макет має лишатися акуратним навіть тоді, коли датасет навмисно порожній."
         onRetry={() => setScenario('ready')}
         renderRowActions={(user) => (
           <Button variant="outline" size="sm" onClick={() => openUser(user)}>
-            Open details
+            Відкрити деталі
           </Button>
         )}
         pager={{

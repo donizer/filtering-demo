@@ -65,14 +65,14 @@ export function MobileDatePicker({
           <DrawerHeader>
             <DrawerTitle>{label}</DrawerTitle>
             <DrawerDescription>
-              Pick a date in the same touch-friendly flow you would use in a row
-              details panel.
+              Оберіть дату в тому самому дружньому до touch сценарії, який ви
+              використовували б у панелі деталей рядка.
             </DrawerDescription>
           </DrawerHeader>
           <div className="px-4 pb-2">{calendar}</div>
           <DrawerFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
-              Close
+              Закрити
             </Button>
             <Button
               variant="ghost"
@@ -81,7 +81,7 @@ export function MobileDatePicker({
                 setOpen(false)
               }}
             >
-              Clear value
+              Очистити значення
             </Button>
           </DrawerFooter>
         </DrawerContent>
@@ -103,7 +103,7 @@ export function MobileDatePicker({
               setOpen(false)
             }}
           >
-            Clear value
+            Очистити значення
           </Button>
         </div>
       </PopoverContent>

@@ -1,62 +1,62 @@
-# Filtering Demo Course Repo
+# Репозиторій курсу з демо фільтрації
 
-This repository is now structured as a two-part lecture app:
+Цей репозиторій організований як навчальний застосунок із двох частин:
 
-1. `Advanced Table Patterns`
-2. `Advanced Filtering`
+1. `Просунуті патерни таблиць`
+2. `Просунута фільтрація`
 
-The first section teaches how to work with complex data and TanStack Table without introducing filters. The second section reuses the same dataset and table foundation, then layers on client-side and server-side filtering patterns.
+У першій частині показано, як працювати зі складними даними та TanStack Table без додавання фільтрів. Друга частина повторно використовує той самий датасет і ту саму основу таблиці, а далі нашаровує клієнтські та серверні патерни фільтрації.
 
-## Getting Started
+## Швидкий старт
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-`pnpm dev` regenerates `src/data/db.json` with Faker before starting Vite, so the app always boots with a fresh dataset that includes text, categorical, numeric, and date fields.
+Команда `pnpm dev` перед запуском Vite заново генерує `src/data/db.json` через Faker, тому застосунок щоразу стартує зі свіжим датасетом, який містить текстові, категоріальні, числові та датові поля.
 
-## App Structure
+## Структура застосунку
 
-### Section 1: Advanced Table Patterns
+### Розділ 1: Просунуті патерни таблиць
 
-Routes in this section:
+Маршрути цього розділу:
 
-- `/advanced-table-patterns/overview` — TanStack Table overview with sorting and pagination
-- `/advanced-table-patterns/grouped-rows` — grouped rows and expandable complex data
-- `/advanced-table-patterns/responsive` — mobile layout without horizontal scrolling
-- `/advanced-table-patterns/ui-states` — loading, empty, error, and ready states
-- `/advanced-table-patterns/date-picker` — mobile-optimized date picker inside a row details flow
-- `/advanced-table-patterns/full-example` — combined non-filtering reference example
+- `/advanced-table-patterns/overview` — огляд TanStack Table із сортуванням і пагінацією
+- `/advanced-table-patterns/grouped-rows` — згруповані рядки та розгортання складних даних
+- `/advanced-table-patterns/responsive` — мобільний макет без горизонтального скролу
+- `/advanced-table-patterns/ui-states` — стани завантаження, порожнього результату, помилки й готовності
+- `/advanced-table-patterns/date-picker` — мобільно-оптимізований вибір дати всередині сценарію деталей рядка
+- `/advanced-table-patterns/full-example` — зведений еталонний приклад без фільтрації
 
-Design rule for this section:
+Правило проєктування для цього розділу:
 
-- No filtering controls
-- No faceting
-- No URL-driven filter state
+- Без елементів керування фільтрами
+- Без фасетів
+- Без стану фільтрів у URL
 
-### Section 2: Advanced Filtering
+### Розділ 2: Просунута фільтрація
 
-Routes in this section:
+Маршрути цього розділу:
 
-- `/advanced-filtering/client` — one fetch, local predicates, fuzzy search, faceted counts
-- `/advanced-filtering/server` — URL-driven filter state, server pagination, server sorting, server facets
+- `/advanced-filtering/client` — одне завантаження, локальні предикати, fuzzy search і фасетні лічильники
+- `/advanced-filtering/server` — стан у URL, серверна пагінація, серверне сортування та серверні фасети
 
-Filtering patterns shown in the second section:
+Патерни фільтрації, показані в другому розділі:
 
-- Exact match
-- Range / boundaries
-- Inclusion / multi-select
-- Partial substring search
-- Fuzzy search
-- Faceted filtering
-- Composite filtering
+- Точний збіг
+- Діапазон / межі
+- Включення / мультивибір
+- Частковий пошук підрядка
+- Нечіткий пошук
+- Фасетна фільтрація
+- Композитна фільтрація
 
-## Shared Data Model
+## Спільна модель даних
 
-The app reuses one primary user dataset across both sections.
+Застосунок повторно використовує один основний датасет користувачів у обох розділах.
 
-Core fields:
+Ключові поля:
 
 - `id`
 - `name`
@@ -68,21 +68,21 @@ Core fields:
 - `joinedAt`
 - `status`
 
-Relevant source files:
+Пов’язані вихідні файли:
 
-- `src/data/user-model.ts` — schema, enums, and types
-- `src/data/db-utils.ts` — DB loading and paginated querying
-- `src/data/user-demo-server.ts` — server functions shared by the lecture pages
-- `src/components/user-table-columns.tsx` — shared table columns and formatters
+- `src/data/user-model.ts` — схема, enum-значення та типи
+- `src/data/db-utils.ts` — завантаження БД і пагіновані запити
+- `src/data/user-demo-server.ts` — серверні функції, спільні для навчальних сторінок
+- `src/components/user-table-columns.tsx` — спільні колонки таблиці та форматування
 
-## Development Notes
+## Нотатки для розробки
 
-- Global app shell lives in `src/routes/__root.tsx`.
-- Section layouts live in `src/routes/advanced-table-patterns.tsx` and `src/routes/advanced-filtering.tsx`.
-- Filtering logic stays isolated in `src/data/user-filters.ts` and `src/components/user-filters-panel.tsx`.
-- The mobile date picker is implemented in `src/components/mobile-date-picker.tsx` and reused in a row-details drawer.
+- Глобальна оболонка застосунку знаходиться в `src/routes/__root.tsx`.
+- Макети розділів знаходяться в `src/routes/advanced-table-patterns.tsx` і `src/routes/advanced-filtering.tsx`.
+- Логіка фільтрації ізольована в `src/data/user-filters.ts` і `src/components/user-filters-panel.tsx`.
+- Мобільний вибір дати реалізований у `src/components/mobile-date-picker.tsx` і повторно використовується в drawer із деталями рядка.
 
-## Build, Lint, Test
+## Збірка, лінтинг, тести
 
 ```bash
 pnpm build
@@ -90,20 +90,20 @@ pnpm lint
 pnpm test
 ```
 
-Available formatting helpers:
+Доступні команди форматування:
 
 ```bash
 pnpm format
 pnpm check
 ```
 
-## Styling
+## Стилізація
 
-The project uses Tailwind CSS plus the local UI component layer in `src/components/ui/`.
+Проєкт використовує Tailwind CSS і локальний шар UI-компонентів у `src/components/ui/`.
 
-The app intentionally uses different presentation strategies for large and small screens:
+Застосунок навмисно використовує різні стратегії подання для великих і малих екранів:
 
-- dense tables on large screens
-- prioritised cards and details flows on smaller screens
+- щільні таблиці на великих екранах
+- пріоритизовані картки та потоки деталей на менших екранах
 
-This is especially important for the `Advanced Table Patterns` section, where the mobile examples are meant to avoid horizontal scrolling.
+Це особливо важливо для розділу `Просунуті патерни таблиць`, де мобільні приклади мають обходитися без горизонтального скролу.

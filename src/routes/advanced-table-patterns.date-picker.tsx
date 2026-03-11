@@ -52,14 +52,14 @@ function MobileDatePickerPage() {
       ...userTableColumns,
       {
         id: 'details',
-        header: 'Details',
+        header: 'Деталі',
         cell: ({ row }) => (
           <Button
             variant="outline"
             size="sm"
             onClick={() => openUser(row.original)}
           >
-            Edit row
+            Редагувати рядок
           </Button>
         ),
       },
@@ -88,12 +88,12 @@ function MobileDatePickerPage() {
     <div className="space-y-4">
       <header className="space-y-2">
         <h2 className="display-title text-2xl font-semibold md:text-3xl">
-          Mobile date picker in row details
+          Мобільний вибір дати в деталях рядка
         </h2>
         <p className="max-w-3xl text-sm text-(--sea-ink-soft)">
-          This page shows the date picker as part of a row details flow. On
-          mobile the picker opens in a drawer, so the touch target and calendar
-          interaction stay comfortable.
+          Ця сторінка показує вибір дати як частину сценарію деталей рядка. На
+          мобільних пристроях він відкривається в drawer, тому touch-цілі та
+          взаємодія з календарем лишаються зручними.
         </p>
       </header>
 
@@ -102,7 +102,7 @@ function MobileDatePickerPage() {
         colSpan={columns.length}
         renderRowActions={(user) => (
           <Button variant="outline" size="sm" onClick={() => openUser(user)}>
-            Edit row
+            Редагувати рядок
           </Button>
         )}
         pager={{

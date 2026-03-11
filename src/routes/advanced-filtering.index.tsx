@@ -11,32 +11,32 @@ function AdvancedFilteringIndexPage() {
     <div className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2">
         <article className="feature-card rounded-2xl border border-(--line) p-5">
-          <h2 className="text-lg font-semibold">Client-side filtering</h2>
+          <h2 className="text-lg font-semibold">Клієнтська фільтрація</h2>
           <p className="mt-2 text-sm text-(--sea-ink-soft)">
-            One payload, all rows in memory, local fuzzy search, faceted counts,
-            and immediate predicate composition.
+            Один набір даних, усі рядки в пам’яті, локальний fuzzy search,
+            фасетні лічильники та миттєва композиція предикатів.
           </p>
           <Link
             from={Route.fullPath}
             to="client"
             className="mt-4 inline-flex text-sm font-semibold"
           >
-            Open client demo
+            Відкрити клієнтське демо
           </Link>
         </article>
 
         <article className="feature-card rounded-2xl border border-(--line) p-5">
-          <h2 className="text-lg font-semibold">Server-side filtering</h2>
+          <h2 className="text-lg font-semibold">Серверна фільтрація</h2>
           <p className="mt-2 text-sm text-(--sea-ink-soft)">
-            URL query state, server filtering, server facets, and fetching only
-            the rows needed for the active page.
+            Стан запиту в URL, серверна фільтрація, серверні фасети та
+            завантаження лише тих рядків, які потрібні для активної сторінки.
           </p>
           <Link
             from={Route.fullPath}
             to="server"
             className="mt-4 inline-flex text-sm font-semibold"
           >
-            Open server demo
+            Відкрити серверне демо
           </Link>
         </article>
       </div>

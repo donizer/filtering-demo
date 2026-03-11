@@ -29,8 +29,12 @@ import {
   TableRow,
 } from '#/components/ui/table'
 import {
+  formatUserCountry,
+  formatUserDepartment,
   formatUserJoinedAt,
+  formatUserRole,
   formatUserSalary,
+  formatUserStatus,
   getUserStatusTone,
 } from '#/components/user-table-columns'
 import type { UserRecord } from '#/data/user-model'
@@ -65,8 +69,8 @@ export function UserRecordsPresentation({
   stickyHeader = false,
   loading = false,
   errorMessage,
-  emptyTitle = 'No rows to show',
-  emptyDescription = 'Adjust the scenario or return to a populated dataset.',
+  emptyTitle = 'Немає рядків для відображення',
+  emptyDescription = 'Змініть сценарій або поверніться до заповненого датасету.',
   onRetry,
   pager,
   renderRowActions,
@@ -157,26 +161,30 @@ export function UserRecordsPresentation({
                     {user.name}
                   </p>
                   <p className="mt-1 text-sm text-(--sea-ink-soft)">
-                    {user.role} · {user.department}
+                    {formatUserRole(user.role)} ·{' '}
+                    {formatUserDepartment(user.department)}
                   </p>
                 </div>
 
                 <span
-                  className={`inline-flex rounded-full border px-2 py-1 text-xs font-semibold capitalize ${getUserStatusTone(user.status)}`}
+                  className={`inline-flex rounded-full border px-2 py-1 text-xs font-semibold ${getUserStatusTone(user.status)}`}
                 >
-                  {user.status}
+                  {formatUserStatus(user.status)}
                 </span>
               </div>
 
               <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                <SummaryItem label="Country" value={user.country} />
-                <SummaryItem label="Age" value={String(user.age)} />
                 <SummaryItem
-                  label="Salary"
+                  label="Країна"
+                  value={formatUserCountry(user.country)}
+                />
+                <SummaryItem label="Вік" value={String(user.age)} />
+                <SummaryItem
+                  label="Зарплата"
                   value={formatUserSalary(user.salary)}
                 />
                 <SummaryItem
-                  label="Joined"
+                  label="Дата приєднання"
                   value={formatUserJoinedAt(user.joinedAt)}
                 />
               </dl>
@@ -199,20 +207,20 @@ export function UserRecordsPresentation({
               onClick={pager.onPreviousPage}
               disabled={!pager.canPreviousPage}
             >
-              Previous
+              Попередня
             </Button>
             <Button
               variant="outline"
               onClick={pager.onNextPage}
               disabled={!pager.canNextPage}
             >
-              Next
+              Наступна
             </Button>
           </div>
 
           <div className="flex items-center gap-2 text-sm text-(--sea-ink-soft)">
             <span>
-              Page {pager.page} of {pager.pageCount}
+              Сторінка {pager.page} з {pager.pageCount}
             </span>
             <Select
               value={String(pager.pageSize)}
@@ -281,14 +289,14 @@ function TableErrorState({
           <EmptyMedia variant="icon">
             <AlertTriangle className="size-5" />
           </EmptyMedia>
-          <EmptyTitle>Unable to render the table</EmptyTitle>
+          <EmptyTitle>Не вдалося відобразити таблицю</EmptyTitle>
           <EmptyDescription>{errorMessage}</EmptyDescription>
         </EmptyHeader>
         {onRetry ? (
           <EmptyContent>
             <Button variant="outline" onClick={onRetry}>
               <RefreshCw className="size-4" />
-              Retry scenario
+              Повторити сценарій
             </Button>
           </EmptyContent>
         ) : null}

@@ -6,39 +6,39 @@ export const Route = createFileRoute('/advanced-table-patterns/')({
 
 const lessons = [
   {
-    title: 'Start from the table core',
+    title: 'Почніть з ядра таблиці',
     description:
-      'Understand column definitions, sorting state, pagination state, and how TanStack Table composes row models.',
+      'Розберіться з визначеннями колонок, станом сортування, станом пагінації та тим, як TanStack Table складає row models.',
     to: '/advanced-table-patterns/overview',
   },
   {
-    title: 'Treat mobile as a separate layout problem',
+    title: 'Сприймайте мобільний режим як окрему задачу макета',
     description:
-      'The lecture page shows why prioritised cards and detail views beat horizontal scrolling on narrow screens.',
+      'Ця сторінка показує, чому пріоритизовані картки та детальні перегляди кращі за горизонтальний скрол на вузьких екранах.',
     to: '/advanced-table-patterns/responsive',
   },
   {
-    title: 'Model complex data explicitly',
+    title: 'Моделюйте складні дані явно',
     description:
-      'Grouped rows demonstrate how to move from flat records to expandable structures without mixing in filtering logic.',
+      'Згруповані рядки демонструють, як перейти від плоских записів до розгортних структур без змішування з логікою фільтрації.',
     to: '/advanced-table-patterns/grouped-rows',
   },
   {
-    title: 'Design state transitions deliberately',
+    title: 'Проєктуйте переходи між станами свідомо',
     description:
-      'Loading, error, empty, and ready states are first-class table patterns, not afterthoughts.',
+      'Стани завантаження, помилки, порожнього результату й готовності є повноцінними патернами таблиць, а не побічною думкою.',
     to: '/advanced-table-patterns/ui-states',
   },
   {
-    title: 'Keep touch interactions local to row details',
+    title: 'Локалізуйте touch-взаємодії в деталях рядка',
     description:
-      'The mobile date picker example stays inside a details/edit flow so it does not turn into filtering-by-date.',
+      'Приклад мобільного вибору дати лишається всередині сценарію деталей і редагування, щоб не перетворюватися на фільтрацію за датою.',
     to: '/advanced-table-patterns/date-picker',
   },
   {
-    title: 'Finish with one polished reference',
+    title: 'Завершіть одним цілісним еталоном',
     description:
-      'The full example combines the patterns you will build during the lecture into one screen.',
+      'Повний приклад об’єднує патерни, які ви будете будувати під час лекції, в один екран.',
     to: '/advanced-table-patterns/full-example',
   },
 ] as const
@@ -48,25 +48,26 @@ function AdvancedTablePatternsIndexPage() {
     <div className="space-y-4">
       <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
         <article className="island-shell rounded-2xl p-6 md:p-8">
-          <p className="island-kicker">Learning order</p>
+          <p className="island-kicker">Порядок навчання</p>
           <h2 className="display-title mt-2 text-2xl font-semibold md:text-3xl">
-            Build table skills before introducing filters
+            Спочатку зберіть навички роботи з таблицями, а вже потім додавайте
+            фільтри
           </h2>
           <p className="mt-3 max-w-2xl text-sm text-(--sea-ink-soft)">
-            These pages establish the baseline: table mechanics, complex data,
-            responsive rendering, mobile interaction, and UI-state design. The
-            filtering section can then reuse the same ideas without explaining
-            them from scratch.
+            Ці сторінки задають базу: механіка таблиці, складні дані, адаптивний
+            рендеринг, мобільна взаємодія та проєктування UI-станів. Після цього
+            розділ про фільтрацію може повторно використовувати ті самі ідеї без
+            пояснення з нуля.
           </p>
         </article>
 
         <article className="feature-card rounded-2xl border border-(--line) p-6">
-          <p className="island-kicker">Constraint</p>
-          <h3 className="mt-2 text-xl font-semibold">No filtering here</h3>
+          <p className="island-kicker">Обмеження</p>
+          <h3 className="mt-2 text-xl font-semibold">Тут немає фільтрації</h3>
           <p className="mt-3 text-sm text-(--sea-ink-soft)">
-            This first section intentionally excludes filter controls, faceting,
-            and URL query filters. Every example focuses only on data shape,
-            table behavior, and presentation decisions.
+            Перший розділ навмисно не містить контролів фільтрації, фасетів і
+            URL-фільтрів. Кожен приклад зосереджується лише на формі даних,
+            поведінці таблиці та рішеннях подання.
           </p>
         </article>
       </div>

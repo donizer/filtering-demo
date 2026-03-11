@@ -1,6 +1,6 @@
 {
-  "short_name": "TanStack App",
-  "name": "Create TanStack App Sample",
+  "short_name": "Курс таблиць",
+  "name": "Навчальний застосунок з патернів таблиць і фільтрації",
   "icons": [
     {
       "src": "favicon.ico",

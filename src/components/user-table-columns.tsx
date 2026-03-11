@@ -3,7 +3,7 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { SortableColumnHeader } from '#/components/sortable-column-header'
 import type { UserRecord } from '#/data/user-model'
 
-const currencyFormatter = new Intl.NumberFormat('en-US', {
+const currencyFormatter = new Intl.NumberFormat('uk-UA', {
   style: 'currency',
   currency: 'USD',
   maximumFractionDigits: 0,
@@ -12,6 +12,39 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
 const dateFormatter = new Intl.DateTimeFormat('uk-UA', {
   dateStyle: 'medium',
 })
+
+const roleLabels: Record<UserRecord['role'], string> = {
+  Developer: 'Розробник',
+  'Data Analyst': 'Аналітик даних',
+  'QA Engineer': 'QA-інженер',
+  'Product Manager': 'Продуктовий менеджер',
+  DevOps: 'DevOps',
+  Designer: 'Дизайнер',
+  'HR Manager': 'HR-менеджер',
+  'Project Manager': 'Керівник проєкту',
+}
+
+const departmentLabels: Record<UserRecord['department'], string> = {
+  Engineering: 'Інженерія',
+  Analytics: 'Аналітика',
+  Product: 'Продукт',
+  Operations: 'Операції',
+  People: 'Люди і культура',
+}
+
+const countryLabels: Record<UserRecord['country'], string> = {
+  Ukraine: 'Україна',
+  Poland: 'Польща',
+  Germany: 'Німеччина',
+  Spain: 'Іспанія',
+  Netherlands: 'Нідерланди',
+  Canada: 'Канада',
+}
+
+const statusLabels: Record<UserRecord['status'], string> = {
+  active: 'Активний',
+  inactive: 'Неактивний',
+}
 
 function sortableHeader(label: string): ColumnDef<UserRecord>['header'] {
   return ({ column }) => (
@@ -31,6 +64,30 @@ export function formatUserJoinedAt(joinedAt: string) {
   return dateFormatter.format(new Date(joinedAt))
 }
 
+export function formatUserRole(role: UserRecord['role']) {
+  return roleLabels[role]
+}
+
+export function formatUserDepartment(department: UserRecord['department']) {
+  return departmentLabels[department]
+}
+
+export function formatUserCountry(country: UserRecord['country']) {
+  return countryLabels[country]
+}
+
+export function formatUserStatus(status: UserRecord['status']) {
+  return statusLabels[status]
+}
+
+export function formatUserStatusFilter(status: UserRecord['status'] | 'all') {
+  if (status === 'all') {
+    return 'Усі статуси'
+  }
+
+  return formatUserStatus(status)
+}
+
 export function getUserStatusTone(status: UserRecord['status']) {
   return status === 'active'
     ? 'border-[rgba(47,106,74,0.22)] bg-[rgba(47,106,74,0.08)] text-[color:var(--palm)]'
@@ -44,42 +101,45 @@ export const userTableColumns: ColumnDef<UserRecord>[] = [
   },
   {
     accessorKey: 'name',
-    header: sortableHeader('Name'),
+    header: sortableHeader('Ім’я'),
   },
   {
     accessorKey: 'role',
-    header: sortableHeader('Role'),
+    header: sortableHeader('Роль'),
+    cell: ({ row }) => formatUserRole(row.original.role),
   },
   {
     accessorKey: 'department',
-    header: sortableHeader('Department'),
+    header: sortableHeader('Відділ'),
+    cell: ({ row }) => formatUserDepartment(row.original.department),
   },
   {
     accessorKey: 'country',
-    header: sortableHeader('Country'),
+    header: sortableHeader('Країна'),
+    cell: ({ row }) => formatUserCountry(row.original.country),
   },
   {
     accessorKey: 'age',
-    header: sortableHeader('Age'),
+    header: sortableHeader('Вік'),
   },
   {
     accessorKey: 'salary',
-    header: sortableHeader('Salary'),
+    header: sortableHeader('Зарплата'),
     cell: ({ row }) => formatUserSalary(row.original.salary),
   },
   {
     accessorKey: 'joinedAt',
-    header: sortableHeader('Joined'),
+    header: sortableHeader('Дата приєднання'),
     cell: ({ row }) => formatUserJoinedAt(row.original.joinedAt),
   },
   {
     accessorKey: 'status',
-    header: sortableHeader('Status'),
+    header: sortableHeader('Статус'),
     cell: ({ row }) => (
       <span
-        className={`inline-flex rounded-full border px-2 py-1 text-xs font-semibold capitalize ${getUserStatusTone(row.original.status)}`}
+        className={`inline-flex rounded-full border px-2 py-1 text-xs font-semibold ${getUserStatusTone(row.original.status)}`}
       >
-        {row.original.status}
+        {formatUserStatus(row.original.status)}
       </span>
     ),
   },

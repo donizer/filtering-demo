@@ -43,27 +43,27 @@ function ResponsiveTablePage() {
     <div className="space-y-4">
       <header className="space-y-2">
         <h2 className="display-title text-2xl font-semibold md:text-3xl">
-          Mobile layout without horizontal scroll
+          Мобільний макет без горизонтального скролу
         </h2>
         <p className="max-w-3xl text-sm text-(--sea-ink-soft)">
-          Desktop keeps the dense table. Smaller screens switch to prioritised
-          cards with the same data, so the page stays readable without forcing
-          sideways scrolling.
+          На десктопі лишається щільна таблиця. На менших екранах сторінка
+          переходить до пріоритизованих карток із тими самими даними, щоб
+          інтерфейс залишався читабельним без бокового скролу.
         </p>
       </header>
 
       <div className="grid gap-4 md:grid-cols-3">
         <PrincipleCard
-          title="Prioritise fields"
-          body="Name, role, status, salary, and joined date stay visible on small screens."
+          title="Пріоритизуйте поля"
+          body="Ім’я, роль, статус, зарплата й дата приєднання залишаються видимими на малих екранах."
         />
         <PrincipleCard
-          title="Change the container"
-          body="A card stack is often a better mobile table than an overflow container."
+          title="Змінюйте контейнер"
+          body="Стос карток часто є кращою мобільною таблицею, ніж контейнер з overflow."
         />
         <PrincipleCard
-          title="Keep desktop dense"
-          body="Large screens still get the full table with sticky headers for scanning."
+          title="Зберігайте щільність на десктопі"
+          body="На великих екранах залишається повна таблиця з липкими заголовками для швидкого сканування."
         />
       </div>
 

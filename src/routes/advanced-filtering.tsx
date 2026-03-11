@@ -5,19 +5,20 @@ import { SectionLayout } from '#/components/section-layout'
 const filteringItems = [
   {
     to: '/advanced-filtering/',
-    label: 'Section overview',
+    label: 'Огляд розділу',
     description:
-      'How filtering builds on the table foundations from section one.',
+      'Як фільтрація спирається на табличну основу з першого розділу.',
   },
   {
     to: '/advanced-filtering/client',
-    label: 'Client filtering',
-    description: 'All rows in memory with local predicates and faceted counts.',
+    label: 'Клієнтська фільтрація',
+    description:
+      'Усі рядки в пам’яті, локальні предикати та фасетні лічильники.',
   },
   {
     to: '/advanced-filtering/server',
-    label: 'Server filtering',
-    description: 'URL-driven filter state with server pagination and sorting.',
+    label: 'Серверна фільтрація',
+    description: 'Стан фільтрів у URL із серверною пагінацією та сортуванням.',
   },
 ] as const
 
@@ -28,9 +29,9 @@ export const Route = createFileRoute('/advanced-filtering')({
 function AdvancedFilteringLayout() {
   return (
     <SectionLayout
-      kicker="Section 2"
-      title="Advanced Filtering"
-      description="This section reuses the same dataset and table composition, then layers on filtering, facets, URL query state, and server coordination."
+      kicker="Розділ 2"
+      title="Просунута фільтрація"
+      description="Цей розділ повторно використовує той самий датасет і ту саму композицію таблиці, а далі додає фільтрацію, фасети, стан запиту в URL і координацію із сервером."
       items={filteringItems}
     >
       <div className="rise-in">

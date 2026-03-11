@@ -9,8 +9,12 @@ import {
 } from '#/components/ui/drawer'
 import { MobileDatePicker } from '#/components/mobile-date-picker'
 import {
+  formatUserCountry,
+  formatUserDepartment,
   formatUserJoinedAt,
+  formatUserRole,
   formatUserSalary,
+  formatUserStatus,
   getUserStatusTone,
 } from '#/components/user-table-columns'
 import type { UserRecord } from '#/data/user-model'
@@ -36,10 +40,10 @@ export function UserDateDetailsDrawer({
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>Row details and scheduling</DrawerTitle>
+          <DrawerTitle>Деталі рядка та планування</DrawerTitle>
           <DrawerDescription>
-            This example keeps date interaction inside the row details flow, not
-            in table filtering.
+            У цьому прикладі взаємодія з датою залишається всередині сценарію
+            деталей рядка, а не переходить у фільтрацію таблиці.
           </DrawerDescription>
         </DrawerHeader>
 
@@ -51,26 +55,30 @@ export function UserDateDetailsDrawer({
                   {user.name}
                 </p>
                 <p className="mt-1 text-sm text-(--sea-ink-soft)">
-                  {user.role} · {user.department}
+                  {formatUserRole(user.role)} ·{' '}
+                  {formatUserDepartment(user.department)}
                 </p>
               </div>
 
               <span
-                className={`inline-flex rounded-full border px-2 py-1 text-xs font-semibold capitalize ${getUserStatusTone(user.status)}`}
+                className={`inline-flex rounded-full border px-2 py-1 text-xs font-semibold ${getUserStatusTone(user.status)}`}
               >
-                {user.status}
+                {formatUserStatus(user.status)}
               </span>
             </div>
 
             <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
-              <DetailItem label="Country" value={user.country} />
-              <DetailItem label="Age" value={String(user.age)} />
               <DetailItem
-                label="Salary"
+                label="Країна"
+                value={formatUserCountry(user.country)}
+              />
+              <DetailItem label="Вік" value={String(user.age)} />
+              <DetailItem
+                label="Зарплата"
                 value={formatUserSalary(user.salary)}
               />
               <DetailItem
-                label="Current date"
+                label="Поточна дата"
                 value={formatUserJoinedAt(user.joinedAt)}
               />
             </dl>
@@ -78,16 +86,16 @@ export function UserDateDetailsDrawer({
 
           <div className="rounded-2xl border border-(--line) bg-white/75 p-4">
             <p className="text-sm font-semibold text-(--sea-ink)">
-              Mobile-optimized date picker
+              Мобільно-оптимізований вибір дати
             </p>
             <p className="mt-1 text-sm text-(--sea-ink-soft)">
-              On touch screens this opens a bottom drawer; on larger screens it
-              stays inline as a popover.
+              На touch-пристроях він відкривається як нижній drawer, а на
+              більших екранах лишається вбудованим popover-елементом.
             </p>
 
             <div className="mt-4">
               <MobileDatePicker
-                label="Pick a next review date"
+                label="Оберіть наступну дату перегляду"
                 value={user.joinedAt}
                 onChange={onDateChange}
               />
@@ -96,7 +104,7 @@ export function UserDateDetailsDrawer({
         </div>
 
         <DrawerFooter>
-          <Button onClick={() => onOpenChange(false)}>Done</Button>
+          <Button onClick={() => onOpenChange(false)}>Готово</Button>
         </DrawerFooter>
       </DrawerContent>
     </Drawer>

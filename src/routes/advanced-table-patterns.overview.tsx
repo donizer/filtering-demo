@@ -43,23 +43,23 @@ function TableOverviewPage() {
     <div className="space-y-4">
       <header className="space-y-2">
         <h2 className="display-title text-2xl font-semibold md:text-3xl">
-          TanStack Table overview
+          Огляд TanStack Table
         </h2>
         <p className="max-w-3xl text-sm text-(--sea-ink-soft)">
-          This page is the minimum useful table setup for the course: one
-          dataset, one column model, local sorting state, and local pagination
-          state. It is intentionally boring because that makes the later
-          extensions easier to explain.
+          Це мінімальна корисна конфігурація таблиці для курсу: один датасет,
+          одна модель колонок, локальний стан сортування та локальний стан
+          пагінації. Вона навмисно проста, бо так легше пояснювати подальші
+          розширення.
         </p>
       </header>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <MetricCard label="Rows in dataset" value={String(users.length)} />
+        <MetricCard label="Рядків у датасеті" value={String(users.length)} />
         <MetricCard
-          label="Visible columns"
+          label="Видимі колонки"
           value={String(userTableColumns.length)}
         />
-        <MetricCard label="Filtering logic" value="Not included" />
+        <MetricCard label="Логіка фільтрації" value="Не входить" />
       </div>
 
       <UserRecordsPresentation

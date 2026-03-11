@@ -31,7 +31,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'Table Patterns and Filtering | TanStack Table + Router',
+        title: 'Патерни таблиць і фільтрація | TanStack Table + Router',
       },
     ],
     links: [
@@ -54,7 +54,7 @@ function RootLayout() {
             to="/"
             className="display-title text-lg font-semibold tracking-tight text-(--sea-ink) no-underline"
           >
-            Table Patterns Demo
+            Демо патернів таблиць
           </Link>
 
           <nav className="flex items-center gap-5 text-sm font-medium">
@@ -63,21 +63,21 @@ function RootLayout() {
               className="nav-link"
               activeProps={{ className: 'nav-link is-active' }}
             >
-              Home
+              Головна
             </Link>
             <Link
               to="/advanced-table-patterns"
               className="nav-link"
               activeProps={{ className: 'nav-link is-active' }}
             >
-              Advanced Table Patterns
+              Патерни таблиць
             </Link>
             <Link
               to="/advanced-filtering"
               className="nav-link"
               activeProps={{ className: 'nav-link is-active' }}
             >
-              Advanced Filtering
+              Фільтрація
             </Link>
           </nav>
         </div>
@@ -89,7 +89,8 @@ function RootLayout() {
 
       <footer className="site-footer mt-8">
         <div className="page-wrap py-4 text-sm text-(--sea-ink-soft)">
-          TanStack Start demo: advanced table patterns before advanced filtering
+          Навчальне демо TanStack Start: спочатку патерни таблиць, потім
+          просунута фільтрація
         </div>
       </footer>
     </div>
@@ -98,7 +99,7 @@ function RootLayout() {
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="uk" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>

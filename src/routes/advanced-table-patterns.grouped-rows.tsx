@@ -19,8 +19,12 @@ import {
   TableRow,
 } from '#/components/ui/table'
 import {
+  formatUserCountry,
+  formatUserDepartment,
   formatUserJoinedAt,
+  formatUserRole,
   formatUserSalary,
+  formatUserStatus,
   getUserStatusTone,
 } from '#/components/user-table-columns'
 import { fetchAllUsers } from '#/data/user-demo-server'
@@ -48,7 +52,7 @@ export const Route = createFileRoute('/advanced-table-patterns/grouped-rows')({
 const columns: ColumnDef<DepartmentRow>[] = [
   {
     accessorKey: 'label',
-    header: 'Department / member',
+    header: 'Відділ / учасник',
     cell: ({ row, getValue }) => {
       const value = getValue<string>()
 
@@ -79,7 +83,7 @@ const columns: ColumnDef<DepartmentRow>[] = [
             <p className="font-medium text-(--sea-ink)">{value}</p>
             {row.original.isGroup ? (
               <p className="text-xs text-(--sea-ink-soft)">
-                Grouped parent row
+                Підсумковий рядок групи
               </p>
             ) : null}
           </div>
@@ -89,25 +93,25 @@ const columns: ColumnDef<DepartmentRow>[] = [
   },
   {
     accessorKey: 'summary',
-    header: 'Summary',
+    header: 'Підсумок',
   },
   {
     accessorKey: 'countrySpread',
-    header: 'Country spread',
+    header: 'Покриття за країнами',
   },
   {
     accessorKey: 'salaryValue',
-    header: 'Salary / avg salary',
+    header: 'Зарплата / середня зарплата',
     cell: ({ row }) => formatUserSalary(row.original.salaryValue),
   },
   {
     accessorKey: 'joinedAt',
-    header: 'Joined / earliest joined',
+    header: 'Дата приєднання / найраніша дата',
     cell: ({ row }) => formatUserJoinedAt(row.original.joinedAt),
   },
   {
     accessorKey: 'statusLabel',
-    header: 'Status snapshot',
+    header: 'Зріз статусу',
     cell: ({ row }) => (
       <span
         className={`inline-flex rounded-full border px-2 py-1 text-xs font-semibold ${row.original.isGroup ? 'border-(--group-accent-border) bg-(--group-accent-bg) text-(--sea-ink)' : getUserStatusTone(row.original.statusTone ?? 'inactive')}`}
@@ -134,33 +138,34 @@ function GroupedRowsPage() {
     <div className="space-y-4">
       <header className="space-y-2">
         <h2 className="display-title text-2xl font-semibold md:text-3xl">
-          Sticky headers and grouped rows
+          Липкі заголовки та згруповані рядки
         </h2>
         <p className="max-w-3xl text-sm text-(--sea-ink-soft)">
-          The table starts with flat user records, then projects them into
-          expandable department groups. This is the point where complex data
-          becomes a modeling problem, not just a rendering problem.
+          Таблиця починається з плоских записів користувачів, а потім проєктує
+          їх у розгортні групи відділів. Саме тут складні дані стають задачею
+          моделювання, а не лише рендерингу.
         </p>
       </header>
 
       <div className="grid gap-4 md:grid-cols-3">
         <article className="feature-card rounded-2xl border border-(--line) p-5">
-          <p className="island-kicker">Grouped parents</p>
+          <p className="island-kicker">Батьківські групи</p>
           <p className="mt-2 text-sm text-(--sea-ink-soft)">
-            Each department row aggregates metrics and owns expandable member
-            rows.
+            Кожен рядок відділу агрегує метрики та володіє розгортними рядками
+            учасників.
           </p>
         </article>
         <article className="feature-card rounded-2xl border border-(--line) p-5">
-          <p className="island-kicker">Expandable structure</p>
+          <p className="island-kicker">Розгортна структура</p>
           <p className="mt-2 text-sm text-(--sea-ink-soft)">
-            TanStack Table reads nested subRows directly through getSubRows.
+            TanStack Table читає вкладені subRows напряму через getSubRows.
           </p>
         </article>
         <article className="feature-card rounded-2xl border border-(--line) p-5">
-          <p className="island-kicker">No filters</p>
+          <p className="island-kicker">Без фільтрів</p>
           <p className="mt-2 text-sm text-(--sea-ink-soft)">
-            Grouping is used here only to teach data shape and row hierarchy.
+            Групування тут використовується лише для пояснення форми даних і
+            ієрархії рядків.
           </p>
         </article>
       </div>
@@ -234,25 +239,25 @@ function GroupedRowsPage() {
                   size="sm"
                   onClick={row.getToggleExpandedHandler()}
                 >
-                  {row.getIsExpanded() ? 'Hide members' : 'Show members'}
+                  {row.getIsExpanded() ? 'Сховати склад' : 'Показати склад'}
                 </Button>
               </div>
 
               <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
                 <MobileSummary
-                  label="Country spread"
+                  label="Покриття країн"
                   value={row.original.countrySpread}
                 />
                 <MobileSummary
-                  label="Average salary"
+                  label="Середня зарплата"
                   value={formatUserSalary(row.original.salaryValue)}
                 />
                 <MobileSummary
-                  label="Earliest joined"
+                  label="Найраніша дата"
                   value={formatUserJoinedAt(row.original.joinedAt)}
                 />
                 <MobileSummary
-                  label="Status"
+                  label="Статус"
                   value={row.original.statusLabel}
                 />
               </dl>
@@ -312,22 +317,22 @@ function buildDepartmentRows(users: UserRecord[]): DepartmentRow[] {
 
     return {
       id: department,
-      label: department,
-      summary: `${members.length} people · ${new Set(members.map((member) => member.role)).size} roles`,
-      countrySpread: `${uniqueCountries} countries`,
+      label: formatUserDepartment(department as UserRecord['department']),
+      summary: `${members.length} працівників · ${new Set(members.map((member) => member.role)).size} ролей`,
+      countrySpread: `${uniqueCountries} країн`,
       salaryValue: averageSalary,
       joinedAt: earliestJoinedAt,
-      statusLabel: `${activeCount} active`,
+      statusLabel: `${activeCount} активних`,
       statusTone: undefined,
       isGroup: true,
       subRows: members.map((member) => ({
         id: `${department}-${member.id}`,
         label: member.name,
-        summary: `${member.role} · ${member.department}`,
-        countrySpread: member.country,
+        summary: `${formatUserRole(member.role)} · ${formatUserDepartment(member.department)}`,
+        countrySpread: formatUserCountry(member.country),
         salaryValue: member.salary,
         joinedAt: member.joinedAt,
-        statusLabel: member.status,
+        statusLabel: formatUserStatus(member.status),
         statusTone: member.status,
         isGroup: false,
       })),
