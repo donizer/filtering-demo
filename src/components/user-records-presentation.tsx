@@ -105,7 +105,7 @@ export function UserRecordsPresentation({
     <div className="space-y-4" data-col-span={colSpan}>
       <div className="hidden rounded-2xl border border-(--line) bg-white/70 lg:block">
         <Table
-          className="table-fixed"
+          className="min-w-max table-auto"
           containerClassName={stickyHeader ? 'max-h-128 overflow-auto' : ''}
         >
           <TableHeader>

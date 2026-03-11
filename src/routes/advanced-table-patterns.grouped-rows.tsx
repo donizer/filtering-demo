@@ -101,12 +101,26 @@ const columns: ColumnDef<DepartmentRow>[] = [
   },
   {
     accessorKey: 'salaryValue',
-    header: 'Зарплата / середня зарплата',
+    header: () => {
+      return (
+        <span>
+          Зарплата
+          <br />
+          середня зарплата
+        </span>
+      )
+    },
     cell: ({ row }) => formatUserSalary(row.original.salaryValue),
   },
   {
     accessorKey: 'joinedAt',
-    header: 'Дата приєднання / найраніша дата',
+    header: () => {
+      return (
+        <span>
+          Дата приєднання <br /> найраніша дата
+        </span>
+      )
+    },
     cell: ({ row }) => formatUserJoinedAt(row.original.joinedAt),
   },
   {
@@ -114,7 +128,12 @@ const columns: ColumnDef<DepartmentRow>[] = [
     header: 'Зріз статусу',
     cell: ({ row }) => (
       <span
-        className={`inline-flex rounded-full border px-2 py-1 text-xs font-semibold ${row.original.isGroup ? 'border-(--group-accent-border) bg-(--group-accent-bg) text-(--sea-ink)' : getUserStatusTone(row.original.statusTone ?? 'inactive')}`}
+        className={cn(
+          'inline-flex rounded-full border px-2 py-1 text-xs font-semibold',
+          row.original.isGroup
+            ? 'border-(--group-accent-border) bg-(--group-accent-bg) text-(--sea-ink)'
+            : getUserStatusTone(row.original.statusTone ?? 'inactive'),
+        )}
       >
         {row.original.statusLabel}
       </span>
