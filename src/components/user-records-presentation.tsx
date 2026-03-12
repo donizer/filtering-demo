@@ -112,7 +112,7 @@ export function UserRecordsPresentation({
                     style={{ width: header.getSize() }}
                     className={
                       stickyHeader
-                        ? 'sticky top-0 z-10 bg-(--header-bg) backdrop-blur-md'
+                        ? 'sticky top-0 z-10 bg-(--header-bg) backdrop-blur-md shadow-[inset_0_-1px_0_var(--sticky-divider)]'
                         : undefined
                     }
                   >

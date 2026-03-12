@@ -233,7 +233,7 @@ function ClientTablePage() {
                   {headerGroup.headers.map((header) => (
                     <TableHead
                       key={header.id}
-                      className="sticky top-0 z-10 bg-(--header-bg) backdrop-blur-md"
+                      className="sticky top-0 z-10 bg-(--header-bg) backdrop-blur-md shadow-[inset_0_-1px_0_var(--sticky-divider)]"
                     >
                       {header.isPlaceholder
                         ? null
