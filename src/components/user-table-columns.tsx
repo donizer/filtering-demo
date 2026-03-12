@@ -15,13 +15,13 @@ const dateFormatter = new Intl.DateTimeFormat('uk-UA', {
 
 const roleLabels: Record<UserRecord['role'], string> = {
   Developer: 'Розробник',
-  'Data Analyst': 'Аналітик даних',
-  'QA Engineer': 'QA-інженер',
-  'Product Manager': 'Продуктовий менеджер',
+  DataAnalyst: 'Аналітик даних',
+  QAEngineer: 'QA-інженер',
+  ProductManager: 'Продуктовий менеджер',
   DevOps: 'DevOps',
   Designer: 'Дизайнер',
-  'HR Manager': 'HR-менеджер',
-  'Project Manager': 'Керівник проєкту',
+  HRManager: 'HR-менеджер',
+  ProjectManager: 'Керівник проєкту',
 }
 
 const departmentLabels: Record<UserRecord['department'], string> = {

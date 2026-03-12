@@ -1,15 +1,25 @@
 import { z } from 'zod'
 
+import { type PrismaUserRecordEntity } from '#/data/prisma-types'
+
+export type UserRole = PrismaUserRecordEntity['role']
+export type UserDepartment = PrismaUserRecordEntity['department']
+export type UserCountry = PrismaUserRecordEntity['country']
+export type UserStatus = PrismaUserRecordEntity['status']
+export type UserRecord = Omit<PrismaUserRecordEntity, 'joinedAt'> & {
+  joinedAt: string
+}
+
 export const USER_ROLES = [
   'Developer',
-  'Data Analyst',
-  'QA Engineer',
-  'Product Manager',
+  'DataAnalyst',
+  'QAEngineer',
+  'ProductManager',
   'DevOps',
   'Designer',
-  'HR Manager',
-  'Project Manager',
-] as const
+  'HRManager',
+  'ProjectManager',
+] as const satisfies readonly UserRole[]
 
 export const USER_DEPARTMENTS = [
   'Engineering',
@@ -17,7 +27,7 @@ export const USER_DEPARTMENTS = [
   'Product',
   'Operations',
   'People',
-] as const
+] as const satisfies readonly UserDepartment[]
 
 export const USER_COUNTRIES = [
   'Ukraine',
@@ -26,9 +36,13 @@ export const USER_COUNTRIES = [
   'Spain',
   'Netherlands',
   'Canada',
-] as const
+] as const satisfies readonly UserCountry[]
 
-export const USER_STATUSES = ['active', 'inactive'] as const
+export const USER_STATUSES = [
+  'active',
+  'inactive',
+] as const satisfies readonly UserStatus[]
+
 export const USER_STATUS_FILTERS = ['all', ...USER_STATUSES] as const
 export const USER_SORT_FIELDS = [
   'id',
@@ -43,7 +57,7 @@ export const USER_SORT_FIELDS = [
 ] as const
 export const USER_SORT_DIRECTIONS = ['asc', 'desc'] as const
 
-export const userRecordSchema = z.object({
+export const userRecordSchema: z.ZodType<UserRecord> = z.object({
   id: z.number().int().positive(),
   name: z.string(),
   role: z.enum(USER_ROLES),
@@ -80,13 +94,8 @@ export const usersQuerySchema = userFiltersSchema.extend({
   sortDir: z.enum(USER_SORT_DIRECTIONS).default('asc'),
 })
 
-export type UserRecord = z.infer<typeof userRecordSchema>
 export type UserFilters = z.infer<typeof userFiltersSchema>
 export type UsersQuery = z.infer<typeof usersQuerySchema>
-export type UserRole = UserRecord['role']
-export type UserDepartment = UserRecord['department']
-export type UserCountry = UserRecord['country']
-export type UserStatus = UserRecord['status']
 export type UserStatusFilter = UserFilters['status']
 export type UserSortField = (typeof USER_SORT_FIELDS)[number]
 export type UserSortDirection = (typeof USER_SORT_DIRECTIONS)[number]

@@ -6,16 +6,49 @@ datasource db {
   provider = "sqlite"
 }
 
+enum UserRole {
+  Developer
+  DataAnalyst
+  QAEngineer
+  ProductManager
+  DevOps
+  Designer
+  HRManager
+  ProjectManager
+}
+
+enum UserDepartment {
+  Engineering
+  Analytics
+  Product
+  Operations
+  People
+}
+
+enum UserCountry {
+  Ukraine
+  Poland
+  Germany
+  Spain
+  Netherlands
+  Canada
+}
+
+enum UserStatus {
+  active
+  inactive
+}
+
 model User {
-  id         Int      @id
+  id         Int            @id
   name       String
-  role       String
-  department String
-  country    String
+  role       UserRole
+  department UserDepartment
+  country    UserCountry
   age        Int
   salary     Int
   joinedAt   DateTime
-  status     String
+  status     UserStatus
 
   @@index([role])
   @@index([department])

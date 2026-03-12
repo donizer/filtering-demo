@@ -2,7 +2,7 @@ import type { UserFilters, UserRecord } from '#/data/user-model'
 import type {
   PrismaUserRecordEntity,
   PrismaUserWhereInput,
-} from '#/data/prisma'
+} from '#/data/prisma-types'
 
 function parseOptionalInteger(value: string) {
   const trimmed = value.trim()
@@ -39,13 +39,13 @@ export function mapPrismaUserRecord(user: PrismaUserRecordEntity): UserRecord {
   return {
     id: user.id,
     name: user.name,
-    role: user.role as UserRecord['role'],
-    department: user.department as UserRecord['department'],
-    country: user.country as UserRecord['country'],
+    role: user.role,
+    department: user.department,
+    country: user.country,
     age: user.age,
     salary: user.salary,
     joinedAt: user.joinedAt.toISOString().slice(0, 10),
-    status: user.status as UserRecord['status'],
+    status: user.status,
   }
 }
 

@@ -1,6 +1,12 @@
 import { faker } from '@faker-js/faker'
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
-import { PrismaClient } from '@prisma/client'
+import {
+  PrismaClient,
+  UserCountry,
+  UserDepartment,
+  UserRole,
+  UserStatus,
+} from '@prisma/client'
 
 const TOTAL_USERS = 2400
 const prisma = new PrismaClient({
@@ -11,70 +17,66 @@ const prisma = new PrismaClient({
 
 const roleProfiles = [
   {
-    role: 'Developer',
-    departments: ['Engineering'],
+    role: UserRole.Developer,
+    departments: [UserDepartment.Engineering],
     salary: { min: 3200, max: 8600 },
     age: { min: 22, max: 47 },
   },
   {
-    role: 'Data Analyst',
-    departments: ['Analytics', 'Product'],
+    role: UserRole.DataAnalyst,
+    departments: [UserDepartment.Analytics, UserDepartment.Product],
     salary: { min: 2200, max: 6200 },
     age: { min: 23, max: 45 },
   },
   {
-    role: 'QA Engineer',
-    departments: ['Engineering', 'Operations'],
+    role: UserRole.QAEngineer,
+    departments: [UserDepartment.Engineering, UserDepartment.Operations],
     salary: { min: 1800, max: 5100 },
     age: { min: 22, max: 43 },
   },
   {
-    role: 'Product Manager',
-    departments: ['Product'],
+    role: UserRole.ProductManager,
+    departments: [UserDepartment.Product],
     salary: { min: 3000, max: 7600 },
     age: { min: 27, max: 52 },
   },
   {
-    role: 'DevOps',
-    departments: ['Engineering', 'Operations'],
+    role: UserRole.DevOps,
+    departments: [UserDepartment.Engineering, UserDepartment.Operations],
     salary: { min: 3400, max: 9000 },
     age: { min: 25, max: 49 },
   },
   {
-    role: 'Designer',
-    departments: ['Product'],
+    role: UserRole.Designer,
+    departments: [UserDepartment.Product],
     salary: { min: 1900, max: 5400 },
     age: { min: 22, max: 44 },
   },
   {
-    role: 'HR Manager',
-    departments: ['People'],
+    role: UserRole.HRManager,
+    departments: [UserDepartment.People],
     salary: { min: 1700, max: 4600 },
     age: { min: 25, max: 54 },
   },
   {
-    role: 'Project Manager',
-    departments: ['Operations', 'Product'],
+    role: UserRole.ProjectManager,
+    departments: [UserDepartment.Operations, UserDepartment.Product],
     salary: { min: 2400, max: 6500 },
     age: { min: 26, max: 53 },
   },
 ]
 
 const countries = [
-  'Ukraine',
-  'Poland',
-  'Germany',
-  'Spain',
-  'Netherlands',
-  'Canada',
+  UserCountry.Ukraine,
+  UserCountry.Poland,
+  UserCountry.Germany,
+  UserCountry.Spain,
+  UserCountry.Netherlands,
+  UserCountry.Canada,
 ]
 
 function createUserRecord(id) {
   const profile = faker.helpers.arrayElement(roleProfiles)
-  const joinedAt = faker.date.between({
-    from: new Date('2017-01-01'),
-    to: new Date(),
-  })
 
   return {
     id,
@@ -84,10 +86,13 @@ function createUserRecord(id) {
     country: faker.helpers.arrayElement(countries),
     age: faker.number.int(profile.age),
     salary: faker.number.int(profile.salary),
-    joinedAt: joinedAt.toISOString().slice(0, 10),
+    joinedAt: faker.date.between({
+      from: new Date('2017-01-01'),
+      to: new Date(),
+    }),
     status: faker.helpers.weightedArrayElement([
-      { value: 'active', weight: 7 },
-      { value: 'inactive', weight: 3 },
+      { value: UserStatus.active, weight: 7 },
+      { value: UserStatus.inactive, weight: 3 },
     ]),
   }
 }
@@ -99,10 +104,7 @@ async function main() {
 
   await prisma.user.deleteMany()
   await prisma.user.createMany({
-    data: users.map((user) => ({
-      ...user,
-      joinedAt: new Date(`${user.joinedAt}T00:00:00.000Z`),
-    })),
+    data: users,
   })
 
   console.log(`Seeded ${users.length} demo users into prisma/dev.db`)
