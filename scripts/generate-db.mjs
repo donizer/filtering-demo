@@ -1,10 +1,13 @@
-import fs from 'node:fs/promises'
-import path from 'node:path'
-
 import { faker } from '@faker-js/faker'
+import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
+import { PrismaClient } from '@prisma/client'
 
-const DB_FILE_PATH = path.join(process.cwd(), 'src/data/db.json')
 const TOTAL_USERS = 2400
+const prisma = new PrismaClient({
+  adapter: new PrismaBetterSqlite3({
+    url: process.env.DATABASE_URL ?? 'file:./prisma/dev.db',
+  }),
+})
 
 const roleProfiles = [
   {
@@ -94,16 +97,23 @@ async function main() {
     createUserRecord(index + 1),
   )
 
-  await fs.writeFile(
-    DB_FILE_PATH,
-    `${JSON.stringify(users, null, 2)}\n`,
-    'utf8',
-  )
-  console.log(`Generated ${users.length} demo users at ${DB_FILE_PATH}`)
+  await prisma.user.deleteMany()
+  await prisma.user.createMany({
+    data: users.map((user) => ({
+      ...user,
+      joinedAt: new Date(`${user.joinedAt}T00:00:00.000Z`),
+    })),
+  })
+
+  console.log(`Seeded ${users.length} demo users into prisma/dev.db`)
 }
 
-main().catch((error) => {
-  console.error('Failed to generate demo data')
-  console.error(error)
-  process.exitCode = 1
-})
+main()
+  .catch((error) => {
+    console.error('Failed to generate demo data')
+    console.error(error)
+    process.exitCode = 1
+  })
+  .finally(async () => {
+    await prisma.$disconnect()
+  })

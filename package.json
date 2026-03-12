@@ -6,19 +6,23 @@
     "#/*": "./src/*"
   },
   "scripts": {
-    "generate:data": "node ./scripts/generate-db.mjs",
+    "postinstall": "prisma generate",
+    "generate:data": "prisma generate && prisma db push && node ./scripts/generate-db.mjs",
     "dev": "pnpm run generate:data && vite dev --port 3000",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "eslint",
     "format": "prettier --check .",
-    "check": "prettier --write . && eslint --fix"
+    "check": "prettier --write . && eslint --fix",
+    "prisma:studio": "prisma studio"
   },
   "dependencies": {
     "@base-ui/react": "^1.2.0",
     "@faker-js/faker": "^10.3.0",
     "@hookform/resolvers": "^5.2.2",
+    "@prisma/adapter-better-sqlite3": "^7.5.0",
+    "@prisma/client": "^7.5.0",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/match-sorter-utils": "latest",
     "@tanstack/react-devtools": "latest",
@@ -33,6 +37,7 @@
     "@tanstack/react-table": "latest",
     "@tanstack/router-plugin": "^1.132.0",
     "@tanstack/zod-adapter": "^1.166.2",
+    "better-sqlite3": "^12.6.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -50,7 +55,6 @@
     "react-hook-form": "^7.71.2",
     "react-resizable-panels": "^4.7.1",
     "recharts": "2.15.4",
-    "sift": "^17.1.3",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.0.2",
     "tailwindcss": "^4.1.18",
@@ -71,6 +75,7 @@
     "@vitejs/plugin-react": "^5.1.4",
     "jsdom": "^28.1.0",
     "prettier": "^3.8.1",
+    "prisma": "^7.5.0",
     "typescript": "^5.7.2",
     "vite": "^7.3.1",
     "vite-tsconfig-paths": "^5.1.4",
@@ -78,8 +83,11 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
+      "@prisma/engines",
+      "better-sqlite3",
       "esbuild",
-      "lightningcss"
+      "lightningcss",
+      "prisma"
     ]
   }
 }

@@ -14,7 +14,7 @@ pnpm install
 pnpm dev
 ```
 
-Команда `pnpm dev` перед запуском Vite заново генерує `src/data/db.json` через Faker, тому застосунок щоразу стартує зі свіжим датасетом, який містить текстові, категоріальні, числові та датові поля.
+Команда `pnpm dev` перед запуском Vite генерує Prisma Client, застосовує схему через `prisma.config.ts`, наповнює `prisma/dev.db` через Faker і запускає застосунок зі свіжим SQLite-датасетом, який містить текстові, категоріальні, числові та датові поля.
 
 ## Структура застосунку
 
@@ -71,7 +71,9 @@ pnpm dev
 Пов’язані вихідні файли:
 
 - `src/data/user-model.ts` — схема, enum-значення та типи
-- `src/data/db-utils.ts` — завантаження БД і пагіновані запити
+- `prisma/schema.prisma` — схема SQLite-бази для Prisma
+- `prisma.config.ts` — конфігурація Prisma CLI та URL підключення для Prisma 7
+- `src/data/db-utils.ts` — запити через Prisma і пагінований результат
 - `src/data/user-demo-server.ts` — серверні функції, спільні для навчальних сторінок
 - `src/components/user-table-columns.tsx` — спільні колонки таблиці та форматування
 
@@ -79,7 +81,7 @@ pnpm dev
 
 - Глобальна оболонка застосунку знаходиться в `src/routes/__root.tsx`.
 - Макети розділів знаходяться в `src/routes/advanced-table-patterns.tsx` і `src/routes/advanced-filtering.tsx`.
-- Логіка фільтрації ізольована в `src/data/user-filters.ts` і `src/components/user-filters-panel.tsx`.
+- Логіка локальної фільтрації ізольована в `src/data/user-filters.ts`, а Prisma-умови для SQLite — в `src/data/user-prisma.ts`.
 - Мобільний вибір дати реалізований у `src/components/mobile-date-picker.tsx` і повторно використовується в drawer із деталями рядка.
 
 ## Збірка, лінтинг, тести

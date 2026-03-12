@@ -1,5 +1,4 @@
 import { matchSorter } from 'match-sorter'
-import sift, { type NestedQuery, type Query, type ValueQuery } from 'sift'
 
 import {
   EMPTY_USER_FILTERS,
@@ -46,9 +45,7 @@ const GLOBAL_SEARCH_KEYS: ReadonlyArray<keyof UserRecord> = [
   'status',
 ]
 
-type UserFilterQuery = NestedQuery<UserRecord>
 type UserListField = 'role' | 'department' | 'country'
-type UserRangeField = 'age' | 'salary' | 'joinedAt'
 
 function parseOptionalInteger(value: string) {
   const trimmed = value.trim()
@@ -72,52 +69,30 @@ function parseOptionalDate(value: string) {
   return Number.isNaN(parsed) ? undefined : trimmed
 }
 
-function escapeRegExp(value: string) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
-
-function buildRangeValueQuery<TValue extends string | number>(
+function matchesOptionalRange<TValue extends number | string>(
+  value: TValue,
   min: TValue | undefined,
   max: TValue | undefined,
-): ValueQuery<TValue> | undefined {
-  const query = {} as ValueQuery<TValue>
-
-  if (min !== undefined) {
-    query.$gte = min
+) {
+  if (min !== undefined && value < min) {
+    return false
   }
 
-  if (max !== undefined) {
-    query.$lte = max
+  if (max !== undefined && value > max) {
+    return false
   }
 
-  return Object.values(query).some((v) => v !== undefined) ? query : undefined
+  return true
 }
 
-function buildInCondition<TKey extends UserListField>(
-  field: TKey,
-  values: UserRecord[TKey][],
-): UserFilterQuery {
-  return {
-    [field]: { $in: values } as ValueQuery<UserRecord[TKey]>,
-  } satisfies UserFilterQuery
+function matchesListFilter<TKey extends UserListField>(
+  selectedValues: UserRecord[TKey][],
+  value: UserRecord[TKey],
+) {
+  return selectedValues.length === 0 || selectedValues.includes(value)
 }
 
-function buildRangeCondition<TKey extends UserRangeField>(
-  field: TKey,
-  min: UserRecord[TKey] | undefined,
-  max: UserRecord[TKey] | undefined,
-): UserFilterQuery | undefined {
-  const rangeQuery = buildRangeValueQuery(min, max)
-
-  if (!rangeQuery) {
-    return undefined
-  }
-
-  return { [field]: rangeQuery } satisfies UserFilterQuery
-}
-
-export function buildUserMongoQuery(filters: UserFilters): Query<UserRecord> {
-  const conditions: UserFilterQuery[] = []
+function matchesUserFilters(user: UserRecord, filters: UserFilters) {
   const exactId = parseOptionalInteger(filters.id)
   const trimmedName = filters.name.trim()
   const ageMin = parseOptionalInteger(filters.ageMin)
@@ -127,62 +102,46 @@ export function buildUserMongoQuery(filters: UserFilters): Query<UserRecord> {
   const joinedFrom = parseOptionalDate(filters.joinedFrom)
   const joinedTo = parseOptionalDate(filters.joinedTo)
 
-  if (exactId !== undefined) {
-    conditions.push({ id: exactId })
+  if (exactId !== undefined && user.id !== exactId) {
+    return false
   }
 
-  if (trimmedName) {
-    conditions.push({
-      name: {
-        $regex: escapeRegExp(trimmedName),
-        $options: 'i',
-      },
-    })
+  if (
+    trimmedName &&
+    !user.name.toLocaleLowerCase().includes(trimmedName.toLocaleLowerCase())
+  ) {
+    return false
   }
 
-  if (filters.status !== 'all') {
-    conditions.push({ status: filters.status })
+  if (filters.status !== 'all' && user.status !== filters.status) {
+    return false
   }
 
-  if (filters.roles.length > 0) {
-    conditions.push(buildInCondition('role', filters.roles))
+  if (!matchesListFilter(filters.roles, user.role)) {
+    return false
   }
 
-  if (filters.departments.length > 0) {
-    conditions.push(buildInCondition('department', filters.departments))
+  if (!matchesListFilter(filters.departments, user.department)) {
+    return false
   }
 
-  if (filters.countries.length > 0) {
-    conditions.push(buildInCondition('country', filters.countries))
+  if (!matchesListFilter(filters.countries, user.country)) {
+    return false
   }
 
-  const ageCondition = buildRangeCondition('age', ageMin, ageMax)
-
-  if (ageCondition) {
-    conditions.push(ageCondition)
+  if (!matchesOptionalRange(user.age, ageMin, ageMax)) {
+    return false
   }
 
-  const salaryCondition = buildRangeCondition('salary', salaryMin, salaryMax)
-
-  if (salaryCondition) {
-    conditions.push(salaryCondition)
+  if (!matchesOptionalRange(user.salary, salaryMin, salaryMax)) {
+    return false
   }
 
-  const joinedAtCondition = buildRangeCondition(
-    'joinedAt',
-    joinedFrom,
-    joinedTo,
-  )
-
-  if (joinedAtCondition) {
-    conditions.push(joinedAtCondition)
+  if (!matchesOptionalRange(user.joinedAt, joinedFrom, joinedTo)) {
+    return false
   }
 
-  if (conditions.length === 0) {
-    return {}
-  }
-
-  return { $and: conditions }
+  return true
 }
 
 function countValues<TValue extends string>(
@@ -198,8 +157,9 @@ function countValues<TValue extends string>(
 
 export function filterUsers(users: UserRecord[], filters: UserFilters) {
   const globalSearch = filters.global.trim()
-  const mongoQuery = buildUserMongoQuery(filters)
-  const exactFilteredUsers = users.filter(sift<UserRecord>(mongoQuery))
+  const exactFilteredUsers = users.filter((user) =>
+    matchesUserFilters(user, filters),
+  )
 
   if (!globalSearch) {
     return exactFilteredUsers

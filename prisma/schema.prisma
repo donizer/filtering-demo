@@ -1,0 +1,27 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id         Int      @id
+  name       String
+  role       String
+  department String
+  country    String
+  age        Int
+  salary     Int
+  joinedAt   DateTime
+  status     String
+
+  @@index([role])
+  @@index([department])
+  @@index([country])
+  @@index([status])
+  @@index([age])
+  @@index([salary])
+  @@index([joinedAt])
+}

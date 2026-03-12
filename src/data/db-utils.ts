@@ -1,9 +1,22 @@
-import fs from 'node:fs/promises'
-import path from 'node:path'
-
-import { buildUserFacets, filterUsers, sortUsers } from '#/data/user-filters'
-import { usersSchema } from '#/data/user-model'
-import type { UserRecord, UsersQuery } from '#/data/user-model'
+import {
+  type FacetOption,
+  type UserFacets,
+  filterUsers,
+  sortUsers,
+} from '#/data/user-filters'
+import { prisma } from '#/data/prisma'
+import {
+  EMPTY_USER_FILTERS,
+  USER_COUNTRIES,
+  USER_DEPARTMENTS,
+  USER_ROLES,
+  USER_STATUSES,
+} from '#/data/user-model'
+import type { UserFilters, UserRecord, UsersQuery } from '#/data/user-model'
+import {
+  buildStructuredUserWhere,
+  mapPrismaUserRecord,
+} from '#/data/user-prisma'
 
 export type { UserRecord, UsersQuery } from '#/data/user-model'
 
@@ -14,27 +27,90 @@ export interface PaginatedUsersResult {
   pageCount: number
   page: number
   pageSize: number
-  facets: ReturnType<typeof buildUserFacets>
+  facets: UserFacets
 }
-
-const DB_FILE_PATH = path.join(process.cwd(), 'src/data/db.json')
 
 const delay = (ms = 500) => new Promise((resolve) => setTimeout(resolve, ms))
 
+async function findUsers(filters: UserFilters) {
+  const users = await prisma.user.findMany({
+    where: buildStructuredUserWhere(filters),
+    orderBy: { id: 'asc' },
+  })
+
+  return users.map(mapPrismaUserRecord)
+}
+
+function countValues<TValue extends string>(
+  users: UserRecord[],
+  key: keyof UserRecord,
+  order: readonly TValue[],
+): FacetOption<TValue>[] {
+  return order.map((value) => ({
+    value,
+    count: users.filter((user) => user[key] === value).length,
+  }))
+}
+
+async function buildUserFacets(filters: UserFilters): Promise<UserFacets> {
+  const roleFilters = { ...filters, roles: EMPTY_USER_FILTERS.roles }
+  const departmentFilters = {
+    ...filters,
+    departments: EMPTY_USER_FILTERS.departments,
+  }
+  const countryFilters = { ...filters, countries: EMPTY_USER_FILTERS.countries }
+  const statusFilters = { ...filters, status: EMPTY_USER_FILTERS.status }
+
+  const [roleUsers, departmentUsers, countryUsers, statusUsers] =
+    await Promise.all([
+      findUsers(roleFilters),
+      findUsers(departmentFilters),
+      findUsers(countryFilters),
+      findUsers(statusFilters),
+    ])
+
+  return {
+    roles: countValues(filterUsers(roleUsers, roleFilters), 'role', USER_ROLES),
+    departments: countValues(
+      filterUsers(departmentUsers, departmentFilters),
+      'department',
+      USER_DEPARTMENTS,
+    ),
+    countries: countValues(
+      filterUsers(countryUsers, countryFilters),
+      'country',
+      USER_COUNTRIES,
+    ),
+    statuses: countValues(
+      filterUsers(statusUsers, statusFilters),
+      'status',
+      USER_STATUSES,
+    ),
+  }
+}
+
 export async function readDB() {
   await delay(150)
-  const file = await fs.readFile(DB_FILE_PATH, 'utf-8')
-  const parsed = JSON.parse(file)
-  return usersSchema.parse(parsed)
+  const users = await prisma.user.findMany({
+    orderBy: { id: 'asc' },
+  })
+
+  return users.map(mapPrismaUserRecord)
 }
 
 export async function queryUsers(
   params: UsersQuery,
 ): Promise<PaginatedUsersResult> {
-  const allUsers = await readDB()
-  const filtered = filterUsers(allUsers, params)
+  await delay(150)
+
+  const [datasetCount, prefilteredUsers, facets] = await Promise.all([
+    prisma.user.count(),
+    findUsers(params),
+    buildUserFacets(params),
+  ])
+
+  const filtered = filterUsers(prefilteredUsers, params)
   const sorted = sortUsers(filtered, params.sortBy, params.sortDir)
-  const facets = buildUserFacets(allUsers, params)
 
   const safePageSize = Math.max(1, params.pageSize)
   const pageCount = Math.max(1, Math.ceil(filtered.length / safePageSize))
@@ -44,7 +120,7 @@ export async function queryUsers(
   return {
     items: sorted.slice(start, start + safePageSize),
     totalCount: filtered.length,
-    datasetCount: allUsers.length,
+    datasetCount,
     pageCount,
     page,
     pageSize: safePageSize,

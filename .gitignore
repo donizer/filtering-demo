@@ -13,3 +13,5 @@ __unconfig*
 todos.json
 routeTree.gen.ts
 db.json
+prisma/dev.db
+prisma/dev.db-journal
