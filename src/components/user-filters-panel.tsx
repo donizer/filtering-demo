@@ -14,23 +14,14 @@ import {
   formatUserRole,
   formatUserStatus,
 } from '#/components/user-table-columns'
+import type {
+  UserArrayFilterKey,
+  UserTextFilterKey,
+} from '#/data/user-filter-state'
 import { cn } from '#/lib/utils'
 
 import type { UserFacets } from '#/data/user-filters'
 import type { UserFilters, UserStatusFilter } from '#/data/user-model'
-
-type TextFilterKey =
-  | 'global'
-  | 'id'
-  | 'name'
-  | 'ageMin'
-  | 'ageMax'
-  | 'salaryMin'
-  | 'salaryMax'
-  | 'joinedFrom'
-  | 'joinedTo'
-
-type ArrayFilterKey = 'roles' | 'departments' | 'countries'
 
 interface UserFiltersPanelProps {
   filters: UserFilters
@@ -40,9 +31,9 @@ interface UserFiltersPanelProps {
   totalCount: number
   modeLabel: string
   isApplyPending?: boolean
-  onTextChange: (key: TextFilterKey, value: string) => void
+  onTextChange: (key: UserTextFilterKey, value: string) => void
   onStatusChange: (value: UserStatusFilter) => void
-  onToggleArrayValue: (key: ArrayFilterKey, value: string) => void
+  onToggleArrayValue: (key: UserArrayFilterKey, value: string) => void
   onReset: () => void
   onApply?: () => void
 }
@@ -50,7 +41,7 @@ interface UserFiltersPanelProps {
 interface FilterChipGroupProps {
   title: string
   description: string
-  kind: ArrayFilterKey
+  kind: UserArrayFilterKey
   values: string[]
   options: Array<{ value: string; count: number }>
   onToggle: (value: string) => void

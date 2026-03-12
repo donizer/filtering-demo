@@ -29,7 +29,16 @@ import { userTableColumns } from '#/components/user-table-columns'
 import { getActiveFilterCount } from '#/data/user-filters'
 import { usersQueryOptions } from '#/data/user-demo-server'
 import { EMPTY_USER_FILTERS, usersQuerySchema } from '#/data/user-model'
-import type { UserFilters, UserRecord, UsersQuery } from '#/data/user-model'
+import type { UserFilters } from '#/data/user-model'
+import {
+  areUserFiltersEqual,
+  getUserSortFromState,
+  toggleUserArrayFilter,
+  updateUserStatusFilter,
+  updateUserTextFilter,
+  type UserArrayFilterKey,
+  type UserTextFilterKey,
+} from '#/data/user-filter-state'
 import {
   buildDraftUsersQuery,
   buildEmptyUsersSearch,
@@ -37,29 +46,6 @@ import {
   getUserFiltersFromQuery,
   getUserSortingFromQuery,
 } from '#/data/user-query-state'
-
-function areFiltersEqual(left: UserFilters, right: UserFilters) {
-  return (
-    left.global === right.global &&
-    left.id === right.id &&
-    left.name === right.name &&
-    left.status === right.status &&
-    left.ageMin === right.ageMin &&
-    left.ageMax === right.ageMax &&
-    left.salaryMin === right.salaryMin &&
-    left.salaryMax === right.salaryMax &&
-    left.joinedFrom === right.joinedFrom &&
-    left.joinedTo === right.joinedTo &&
-    left.roles.length === right.roles.length &&
-    left.roles.every((value, index) => value === right.roles[index]) &&
-    left.departments.length === right.departments.length &&
-    left.departments.every(
-      (value, index) => value === right.departments[index],
-    ) &&
-    left.countries.length === right.countries.length &&
-    left.countries.every((value, index) => value === right.countries[index])
-  )
-}
 
 export const Route = createFileRoute('/advanced-filtering/server')({
   validateSearch: usersQuerySchema,
@@ -131,56 +117,18 @@ function ServerTablePage() {
     }
   }, [data, navigate, search.page])
 
-  const updateTextFilter = (key: keyof UserFilters, value: string) => {
-    setDraftFilters((current) => ({ ...current, [key]: value }))
+  const updateTextFilter = (key: UserTextFilterKey, value: string) => {
+    setDraftFilters((current) => updateUserTextFilter(current, key, value))
   }
 
   const updateStatusFilter = (value: UserFilters['status']) => {
-    setDraftFilters((current) => ({ ...current, status: value }))
+    setDraftFilters((current) => updateUserStatusFilter(current, value))
   }
 
-  const toggleArrayFilter = (
-    key: 'roles' | 'departments' | 'countries',
-    value: string,
-  ) => {
-    setDraftFilters((current) => {
-      switch (key) {
-        case 'roles': {
-          const nextValues = current.roles.includes(value as UserRecord['role'])
-            ? current.roles.filter((item) => item !== value)
-            : [...current.roles, value as UserRecord['role']]
-
-          return {
-            ...current,
-            roles: nextValues,
-          }
-        }
-        case 'departments': {
-          const nextValues = current.departments.includes(
-            value as UserRecord['department'],
-          )
-            ? current.departments.filter((item) => item !== value)
-            : [...current.departments, value as UserRecord['department']]
-
-          return {
-            ...current,
-            departments: nextValues,
-          }
-        }
-        case 'countries': {
-          const nextValues = current.countries.includes(
-            value as UserRecord['country'],
-          )
-            ? current.countries.filter((item) => item !== value)
-            : [...current.countries, value as UserRecord['country']]
-
-          return {
-            ...current,
-            countries: nextValues,
-          }
-        }
-      }
-    })
+  const toggleArrayFilter = (key: UserArrayFilterKey, value: string) => {
+    setDraftFilters((current) =>
+      toggleUserArrayFilter(current, key, value as never),
+    )
   }
 
   const applyFilters = () => {
@@ -204,15 +152,12 @@ function ServerTablePage() {
     onSortingChange: (updater) => {
       const nextSorting =
         typeof updater === 'function' ? updater(sorting) : updater
-      const nextSort = nextSorting[0]
-      const sortBy = nextSort ? (nextSort.id as UsersQuery['sortBy']) : ''
-      const sortDir = nextSort?.desc ? 'desc' : 'asc'
+      const nextSort = getUserSortFromState(nextSorting)
 
       navigate({
         resetScroll: false,
         search: buildUsersSearchUpdate(search, {
-          sortBy,
-          sortDir,
+          ...nextSort,
           page: 1,
         }),
       })
@@ -246,7 +191,7 @@ function ServerTablePage() {
     [search],
   )
   const activeFilterCount = getActiveFilterCount(draftFilters)
-  const isApplyPending = !areFiltersEqual(draftFilters, appliedFilters)
+  const isApplyPending = !areUserFiltersEqual(draftFilters, appliedFilters)
 
   if (!data) return null
 

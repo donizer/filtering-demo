@@ -29,8 +29,18 @@ import {
   filterUsers,
   getActiveFilterCount,
 } from '#/data/user-filters'
+import type {
+  UserArrayFilterKey,
+  UserTextFilterKey,
+} from '#/data/user-filter-state'
+import {
+  getUserSortFromState,
+  toggleUserArrayFilter,
+  updateUserStatusFilter,
+  updateUserTextFilter,
+} from '#/data/user-filter-state'
 import { usersQuerySchema } from '#/data/user-model'
-import type { UserFilters, UserRecord, UsersQuery } from '#/data/user-model'
+import type { UserFilters } from '#/data/user-model'
 import {
   buildEmptyUsersSearch,
   buildUsersSearchUpdate,
@@ -97,16 +107,13 @@ function ClientTablePage() {
     onSortingChange: (updater) => {
       const nextSorting =
         typeof updater === 'function' ? updater(sorting) : updater
-      const nextSort = nextSorting[0]
-      const sortBy = nextSort ? (nextSort.id as UsersQuery['sortBy']) : ''
-      const sortDir = nextSort?.desc ? 'desc' : 'asc'
+      const nextSort = getUserSortFromState(nextSorting)
 
       navigate({
         replace: true,
         resetScroll: false,
         search: buildUsersSearchUpdate(search, {
-          sortBy,
-          sortDir,
+          ...nextSort,
           page: 1,
         }),
       })
@@ -116,13 +123,12 @@ function ClientTablePage() {
     getSortedRowModel: getSortedRowModel(),
   })
 
-  const updateTextFilter = (key: keyof UserFilters, value: string) => {
+  const updateTextFilter = (key: UserTextFilterKey, value: string) => {
     navigate({
       replace: true,
       resetScroll: false,
       search: buildUsersSearchUpdate(search, {
-        ...filters,
-        [key]: value,
+        ...updateUserTextFilter(filters, key, value),
         page: 1,
       }),
     })
@@ -133,55 +139,14 @@ function ClientTablePage() {
       replace: true,
       resetScroll: false,
       search: buildUsersSearchUpdate(search, {
-        ...filters,
-        status: value,
+        ...updateUserStatusFilter(filters, value),
         page: 1,
       }),
     })
   }
 
-  const toggleArrayFilter = (
-    key: 'roles' | 'departments' | 'countries',
-    value: string,
-  ) => {
-    const nextFilters = (() => {
-      switch (key) {
-        case 'roles': {
-          const nextValues = filters.roles.includes(value as UserRecord['role'])
-            ? filters.roles.filter((item) => item !== value)
-            : [...filters.roles, value as UserRecord['role']]
-
-          return {
-            ...filters,
-            roles: nextValues,
-          }
-        }
-        case 'departments': {
-          const nextValues = filters.departments.includes(
-            value as UserRecord['department'],
-          )
-            ? filters.departments.filter((item) => item !== value)
-            : [...filters.departments, value as UserRecord['department']]
-
-          return {
-            ...filters,
-            departments: nextValues,
-          }
-        }
-        case 'countries': {
-          const nextValues = filters.countries.includes(
-            value as UserRecord['country'],
-          )
-            ? filters.countries.filter((item) => item !== value)
-            : [...filters.countries, value as UserRecord['country']]
-
-          return {
-            ...filters,
-            countries: nextValues,
-          }
-        }
-      }
-    })()
+  const toggleArrayFilter = (key: UserArrayFilterKey, value: string) => {
+    const nextFilters = toggleUserArrayFilter(filters, key, value as never)
 
     navigate({
       replace: true,
