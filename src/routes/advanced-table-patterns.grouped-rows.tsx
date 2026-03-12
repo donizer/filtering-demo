@@ -9,6 +9,7 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import { createFileRoute } from '@tanstack/react-router'
 
+import { TablePaginationBar } from '#/components/table-pagination'
 import { Button } from '#/components/ui/button'
 import {
   Table,
@@ -144,9 +145,39 @@ const columns: ColumnDef<DepartmentRow>[] = [
 function GroupedRowsPage() {
   const users = Route.useLoaderData()
   const groupedRows = React.useMemo(() => buildDepartmentRows(users), [users])
+  const [pagination, setPagination] = React.useState({
+    pageIndex: 0,
+    pageSize: 2,
+  })
+
+  const pageCount = Math.max(
+    1,
+    Math.ceil(groupedRows.length / pagination.pageSize),
+  )
+
+  React.useEffect(() => {
+    const maxPageIndex = Math.max(0, pageCount - 1)
+
+    if (pagination.pageIndex > maxPageIndex) {
+      setPagination((current) =>
+        current.pageIndex === maxPageIndex
+          ? current
+          : {
+              ...current,
+              pageIndex: maxPageIndex,
+            },
+      )
+    }
+  }, [pageCount, pagination.pageIndex])
+
+  const pagedRows = React.useMemo(() => {
+    const start = pagination.pageIndex * pagination.pageSize
+
+    return groupedRows.slice(start, start + pagination.pageSize)
+  }, [groupedRows, pagination.pageIndex, pagination.pageSize])
 
   const table = useReactTable({
-    data: groupedRows,
+    data: pagedRows,
     columns,
     getSubRows: (row) => row.subRows,
     getCoreRowModel: getCoreRowModel(),
@@ -310,6 +341,40 @@ function GroupedRowsPage() {
             </article>
           ))}
       </div>
+
+      <TablePaginationBar
+        page={pagination.pageIndex + 1}
+        pageCount={pageCount}
+        pageSize={pagination.pageSize}
+        canPreviousPage={pagination.pageIndex > 0}
+        canNextPage={pagination.pageIndex + 1 < pageCount}
+        onPreviousPage={() =>
+          setPagination((current) => ({
+            ...current,
+            pageIndex: Math.max(0, current.pageIndex - 1),
+          }))
+        }
+        onNextPage={() =>
+          setPagination((current) => ({
+            ...current,
+            pageIndex: Math.min(pageCount - 1, current.pageIndex + 1),
+          }))
+        }
+        onPageChange={(page) =>
+          setPagination((current) => ({
+            ...current,
+            pageIndex: page - 1,
+          }))
+        }
+        onPageSizeChange={(value) =>
+          setPagination((current) => ({
+            ...current,
+            pageIndex: 0,
+            pageSize: Number(value),
+          }))
+        }
+        pageSizeOptions={[2, 3, 5]}
+      />
     </div>
   )
 }

@@ -12,13 +12,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '#/components/ui/empty'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#/components/ui/select'
 import { Skeleton } from '#/components/ui/skeleton'
 import {
   Table,
@@ -37,6 +30,7 @@ import {
   formatUserStatus,
   getUserStatusTone,
 } from '#/components/user-table-columns'
+import { TablePaginationBar } from '#/components/table-pagination'
 import type { UserRecord } from '#/data/user-model'
 
 interface PagerConfig {
@@ -47,6 +41,7 @@ interface PagerConfig {
   canNextPage: boolean
   onPreviousPage: () => void
   onNextPage: () => void
+  onPageChange: (page: number) => void
   onPageSizeChange: (value: string) => void
 }
 
@@ -203,45 +198,7 @@ export function UserRecordsPresentation({
         })}
       </div>
 
-      {pager ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-(--line) bg-white/60 px-4 py-3">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={pager.onPreviousPage}
-              disabled={!pager.canPreviousPage}
-            >
-              Попередня
-            </Button>
-            <Button
-              variant="outline"
-              onClick={pager.onNextPage}
-              disabled={!pager.canNextPage}
-            >
-              Наступна
-            </Button>
-          </div>
-
-          <div className="flex items-center gap-2 text-sm text-(--sea-ink-soft)">
-            <span>
-              Сторінка {pager.page} з {pager.pageCount}
-            </span>
-            <Select
-              value={String(pager.pageSize)}
-              onValueChange={pager.onPageSizeChange}
-            >
-              <SelectTrigger className="w-24 bg-white/80">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="5">5</SelectItem>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="20">20</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      ) : null}
+      {pager ? <TablePaginationBar {...pager} /> : null}
     </div>
   )
 }

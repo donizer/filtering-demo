@@ -15,15 +15,8 @@ import {
   keepPreviousData,
 } from '@tanstack/react-query'
 
+import { TablePaginationBar } from '#/components/table-pagination'
 import { UserFiltersPanel } from '#/components/user-filters-panel'
-import { Button } from '#/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#/components/ui/select'
 import {
   Table,
   TableBody,
@@ -343,57 +336,40 @@ function ServerTablePage() {
           </Table>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={() =>
-                navigate({
-                  resetScroll: false,
-                  search: buildUsersSearchUpdate(search, {
-                    page: Math.max(1, search.page - 1),
-                  }),
-                })
-              }
-              disabled={currentPage <= 1}
-            >
-              Попередня
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() =>
-                navigate({
-                  resetScroll: false,
-                  search: buildUsersSearchUpdate(search, {
-                    page: Math.min(data.pageCount, search.page + 1),
-                  }),
-                })
-              }
-              disabled={currentPage >= data.pageCount}
-            >
-              Наступна
-            </Button>
-          </div>
-
-          <div className="flex items-center gap-2 text-sm">
-            <span>
-              Сторінка {currentPage} з {data.pageCount}
-            </span>
-            <Select
-              value={String(search.pageSize)}
-              onValueChange={onPageSizeChange}
-            >
-              <SelectTrigger className="w-24 bg-white/80">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="20">20</SelectItem>
-                <SelectItem value="30">30</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        <TablePaginationBar
+          className="mt-4"
+          page={currentPage}
+          pageCount={data.pageCount}
+          pageSize={search.pageSize}
+          canPreviousPage={currentPage > 1}
+          canNextPage={currentPage < data.pageCount}
+          onPreviousPage={() =>
+            navigate({
+              resetScroll: false,
+              search: buildUsersSearchUpdate(search, {
+                page: Math.max(1, currentPage - 1),
+              }),
+            })
+          }
+          onNextPage={() =>
+            navigate({
+              resetScroll: false,
+              search: buildUsersSearchUpdate(search, {
+                page: Math.min(data.pageCount, currentPage + 1),
+              }),
+            })
+          }
+          onPageChange={(page) =>
+            navigate({
+              resetScroll: false,
+              search: buildUsersSearchUpdate(search, {
+                page,
+              }),
+            })
+          }
+          onPageSizeChange={onPageSizeChange}
+          pageSizeOptions={[10, 20, 30]}
+        />
       </div>
     </section>
   )

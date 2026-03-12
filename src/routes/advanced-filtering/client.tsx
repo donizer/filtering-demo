@@ -12,15 +12,8 @@ import {
   useNavigate,
 } from '@tanstack/react-router'
 
+import { TablePaginationBar } from '#/components/table-pagination'
 import { UserFiltersPanel } from '#/components/user-filters-panel'
-import { Button } from '#/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#/components/ui/select'
 import {
   Table,
   TableBody,
@@ -282,44 +275,19 @@ function ClientTablePage() {
           </Table>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              Попередня
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              Наступна
-            </Button>
-          </div>
-
-          <div className="flex items-center gap-2 text-sm">
-            <span>
-              Сторінка {table.getState().pagination.pageIndex + 1} з{' '}
-              {table.getPageCount()}
-            </span>
-            <Select
-              value={String(table.getState().pagination.pageSize)}
-              onValueChange={(value) => table.setPageSize(Number(value))}
-            >
-              <SelectTrigger className="w-24 bg-white/80">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="20">20</SelectItem>
-                <SelectItem value="30">30</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        <TablePaginationBar
+          className="mt-4"
+          page={table.getState().pagination.pageIndex + 1}
+          pageCount={table.getPageCount()}
+          pageSize={table.getState().pagination.pageSize}
+          canPreviousPage={table.getCanPreviousPage()}
+          canNextPage={table.getCanNextPage()}
+          onPreviousPage={() => table.previousPage()}
+          onNextPage={() => table.nextPage()}
+          onPageChange={(page) => table.setPageIndex(page - 1)}
+          onPageSizeChange={(value) => table.setPageSize(Number(value))}
+          pageSizeOptions={[10, 20, 30]}
+        />
       </div>
     </section>
   )

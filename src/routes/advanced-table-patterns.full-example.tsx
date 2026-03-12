@@ -182,6 +182,7 @@ function FullExamplePage() {
           canNextPage: table.getCanNextPage(),
           onPreviousPage: () => table.previousPage(),
           onNextPage: () => table.nextPage(),
+          onPageChange: (page) => table.setPageIndex(page - 1),
           onPageSizeChange: (value) => table.setPageSize(Number(value)),
         }}
       />

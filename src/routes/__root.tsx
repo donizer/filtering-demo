@@ -45,14 +45,12 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
   component: RootLayout,
 })
 
-const shellContainerClass =
-  'mx-auto w-full max-w-[1220px] px-4 md:px-5'
+const shellContainerClass = 'mx-auto w-full max-w-[1220px] px-4 md:px-5'
 
 const navLinkClass =
-  "relative text-(--sea-ink-soft) no-underline transition-[color] duration-180 after:absolute after:left-0 after:-bottom-2 after:h-[2px] after:w-full after:origin-left after:scale-x-0 after:bg-[linear-gradient(90deg,var(--lagoon),#7ed3bf)] after:transition-transform after:duration-170 hover:text-(--sea-ink) hover:after:scale-x-100"
+  'relative text-(--sea-ink-soft) no-underline transition-[color] duration-180 after:absolute after:left-0 after:-bottom-2 after:h-[2px] after:w-full after:origin-left after:scale-x-0 after:bg-[linear-gradient(90deg,var(--lagoon),#7ed3bf)] after:transition-transform after:duration-170 hover:text-(--sea-ink) hover:after:scale-x-100'
 
-const navLinkActiveClass =
-  `${navLinkClass} text-(--sea-ink) after:scale-x-100`
+const navLinkActiveClass = `${navLinkClass} text-(--sea-ink) after:scale-x-100`
 
 function RootLayout() {
   return (
@@ -99,7 +97,9 @@ function RootLayout() {
       </main>
 
       <footer className="site-footer mt-5 md:mt-6">
-        <div className={`${shellContainerClass} py-4 text-sm text-(--sea-ink-soft)`}>
+        <div
+          className={`${shellContainerClass} py-4 text-sm text-(--sea-ink-soft)`}
+        >
           Навчальне демо TanStack Start: спочатку патерни таблиць, потім
           просунута фільтрація
         </div>
