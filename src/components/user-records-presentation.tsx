@@ -103,9 +103,9 @@ export function UserRecordsPresentation({
 
   return (
     <div className="space-y-4" data-col-span={colSpan}>
-      <div className="hidden rounded-2xl border border-(--line) bg-white/70 lg:block">
+      <div className="hidden overflow-hidden rounded-2xl border border-(--line) bg-white/70 lg:block">
         <Table
-          className="min-w-max table-auto"
+          className="min-w-full table-fixed"
           containerClassName={stickyHeader ? 'max-h-128 overflow-auto' : ''}
         >
           <TableHeader>
@@ -114,6 +114,7 @@ export function UserRecordsPresentation({
                 {headerGroup.headers.map((header) => (
                   <TableHead
                     key={header.id}
+                    style={{ width: header.getSize() }}
                     className={
                       stickyHeader
                         ? 'sticky top-0 z-10 bg-(--header-bg) backdrop-blur-md'
@@ -136,7 +137,10 @@ export function UserRecordsPresentation({
             {rows.map((row) => (
               <TableRow key={row.id}>
                 {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
+                  <TableCell
+                    key={cell.id}
+                    style={{ width: cell.column.getSize() }}
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}

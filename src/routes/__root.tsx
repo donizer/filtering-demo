@@ -45,11 +45,22 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
   component: RootLayout,
 })
 
+const shellContainerClass =
+  'mx-auto w-full max-w-[1220px] px-4 md:px-5'
+
+const navLinkClass =
+  "relative text-(--sea-ink-soft) no-underline transition-[color] duration-180 after:absolute after:left-0 after:-bottom-2 after:h-[2px] after:w-full after:origin-left after:scale-x-0 after:bg-[linear-gradient(90deg,var(--lagoon),#7ed3bf)] after:transition-transform after:duration-170 hover:text-(--sea-ink) hover:after:scale-x-100"
+
+const navLinkActiveClass =
+  `${navLinkClass} text-(--sea-ink) after:scale-x-100`
+
 function RootLayout() {
   return (
     <div className="min-h-screen flex flex-col">
       <header className="sticky top-0 z-10 border-b border-(--line) bg-(--header-bg) backdrop-blur-md">
-        <div className="page-wrap flex flex-wrap items-center justify-between gap-3 py-4">
+        <div
+          className={`${shellContainerClass} flex flex-wrap items-center justify-between gap-3 py-3.5`}
+        >
           <Link
             to="/"
             className="display-title text-lg font-semibold tracking-tight text-(--sea-ink) no-underline"
@@ -57,25 +68,25 @@ function RootLayout() {
             Демо патернів таблиць
           </Link>
 
-          <nav className="flex items-center gap-5 text-sm font-medium">
+          <nav className="flex items-center gap-4 text-sm font-medium md:gap-5">
             <Link
               to="/"
-              className="nav-link"
-              activeProps={{ className: 'nav-link is-active' }}
+              className={navLinkClass}
+              activeProps={{ className: navLinkActiveClass }}
             >
               Головна
             </Link>
             <Link
               to="/advanced-table-patterns"
-              className="nav-link"
-              activeProps={{ className: 'nav-link is-active' }}
+              className={navLinkClass}
+              activeProps={{ className: navLinkActiveClass }}
             >
               Патерни таблиць
             </Link>
             <Link
               to="/advanced-filtering"
-              className="nav-link"
-              activeProps={{ className: 'nav-link is-active' }}
+              className={navLinkClass}
+              activeProps={{ className: navLinkActiveClass }}
             >
               Фільтрація
             </Link>
@@ -83,12 +94,12 @@ function RootLayout() {
         </div>
       </header>
 
-      <main className="page-wrap py-8 flex-1">
+      <main className="flex-1 py-5 md:py-6">
         <Outlet />
       </main>
 
-      <footer className="site-footer mt-8">
-        <div className="page-wrap py-4 text-sm text-(--sea-ink-soft)">
+      <footer className="site-footer mt-5 md:mt-6">
+        <div className={`${shellContainerClass} py-4 text-sm text-(--sea-ink-soft)`}>
           Навчальне демо TanStack Start: спочатку патерни таблиць, потім
           просунута фільтрація
         </div>
